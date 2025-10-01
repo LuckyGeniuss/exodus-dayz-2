@@ -1,4 +1,5 @@
 import { ShoppingCart } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 
@@ -17,16 +18,17 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-[var(--shadow-elevated)] hover:-translate-y-1 bg-gradient-to-br from-card to-card/80 border-border">
-      <CardHeader className="p-0">
-        <div className="aspect-square overflow-hidden bg-muted">
-          <img
-            src={product.image}
-            alt={product.name}
-            className="h-full w-full object-cover transition-transform hover:scale-110"
-          />
-        </div>
-      </CardHeader>
+    <Link to={`/product/${product.id}`}>
+      <Card className="overflow-hidden transition-all hover:shadow-[var(--shadow-elevated)] hover:-translate-y-1 bg-gradient-to-br from-card to-card/80 border-border h-full">
+        <CardHeader className="p-0">
+          <div className="aspect-square overflow-hidden bg-muted">
+            <img
+              src={product.image}
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform hover:scale-110"
+            />
+          </div>
+        </CardHeader>
       <CardContent className="p-4">
         <div className="mb-2">
           <span className="inline-block px-2 py-1 text-xs font-medium bg-primary/20 text-primary rounded">
@@ -43,12 +45,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <Button className="w-full" variant="default">
-          <ShoppingCart className="mr-2 h-4 w-4" />
-          Придбати
-        </Button>
-      </CardFooter>
-    </Card>
+          <Button className="w-full" variant="default">
+            <ShoppingCart className="mr-2 h-4 w-4" />
+            Придбати
+          </Button>
+        </CardFooter>
+      </Card>
+    </Link>
   );
 };
 
