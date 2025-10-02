@@ -59,9 +59,23 @@ const ProductDetail = () => {
             <div>
               <Badge className="mb-3">{product.category}</Badge>
               <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
-              <p className="text-muted-foreground text-lg leading-relaxed">
-                {product.description}
+              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                {product.fullDescription || product.description}
               </p>
+              
+              {product.features && product.features.length > 0 && (
+                <div className="space-y-3 mt-6">
+                  <h3 className="font-semibold text-lg">Особливості:</h3>
+                  <ul className="space-y-2">
+                    {product.features.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <span className="text-primary mt-1">✓</span>
+                        <span className="text-muted-foreground">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             <div className="flex items-baseline gap-2 py-6 border-y border-border">

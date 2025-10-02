@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import VeteranBanner from "@/components/VeteranBanner";
 import CategoryFilter, { Category } from "@/components/CategoryFilter";
 import ProductCard from "@/components/ProductCard";
 import Footer from "@/components/Footer";
@@ -31,6 +32,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <Hero />
+      <VeteranBanner />
       
       <section id="shop" className="container mx-auto px-4 py-20">
         <div className="text-center mb-12">

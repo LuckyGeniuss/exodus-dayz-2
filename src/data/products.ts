@@ -1,8 +1,11 @@
-import vipIcon from "@/assets/vip-icon.png";
-import clothingIcon from "@/assets/clothing-icon.png";
-import vehicleIcon from "@/assets/vehicle-icon.png";
-import cassetteIcon from "@/assets/cassette-icon.png";
-import cosmeticIcon from "@/assets/cosmetic-icon.png";
+import vipBadge from "@/assets/vip-badge.jpg";
+import clothingHoodie from "@/assets/clothing-hoodie.jpg";
+import clothingBandana from "@/assets/clothing-bandana.jpg";
+import clothingSkullMask from "@/assets/clothing-skull-mask.jpg";
+import vehicleCustom from "@/assets/vehicle-custom.jpg";
+import cassetteRock from "@/assets/cassette-rock.jpg";
+import cosmeticGoldenGun from "@/assets/cosmetic-golden-gun.jpg";
+import cosmeticSmoke from "@/assets/cosmetic-smoke.jpg";
 
 export const products = [
   {
@@ -11,7 +14,15 @@ export const products = [
     category: "VIP",
     price: 200,
     description: "Базовий VIP-статус на 1 місяць. Приоритетний вхід на сервер та VIP-значок у профілі.",
-    image: vipIcon,
+    image: vipBadge,
+    fullDescription: "Отримайте базовий VIP-статус на 30 днів та насолоджуйтесь привілеями! Пріоритетний вхід на сервер дозволить вам завжди бути першим у черзі, навіть коли сервер заповнений. Унікальний VIP-бейдж у вашому профілі підкреслить ваш статус підтримувача проекту. Ідеально підходить для тих, хто хоче спробувати VIP-досвід без довгострокових зобов'язань.",
+    features: [
+      "Приоритетний вхід на сервер (зарезервований слот)",
+      "Унікальний VIP-значок у профілі та чаті",
+      "Спеціальний колір нікнейму",
+      "Доступ до VIP-каналу в Discord",
+      "Термін дії: 30 днів"
+    ]
   },
   {
     id: "2",
@@ -19,7 +30,7 @@ export const products = [
     category: "VIP",
     price: 500,
     description: "Розширений VIP на 3 місяці. Приоритетний вхід, унікальний колір імені та ексклюзивні скіни.",
-    image: vipIcon,
+    image: vipBadge,
   },
   {
     id: "3",
@@ -27,7 +38,7 @@ export const products = [
     category: "VIP",
     price: 900,
     description: "VIP-статус на півроку. Золотий колір імені, спеціальний тег та доступ до додаткових косметичних опцій.",
-    image: vipIcon,
+    image: vipBadge,
   },
   {
     id: "4",
@@ -35,7 +46,7 @@ export const products = [
     category: "VIP",
     price: 1500,
     description: "Максимальний VIP на рік. Платинова схема, персоналізований титул, ексклюзивні нашивки.",
-    image: vipIcon,
+    image: vipBadge,
   },
   {
     id: "5",
@@ -43,7 +54,7 @@ export const products = [
     category: "VIP",
     price: 150,
     description: "Приоритетний вхід на сервер на місяць без повноцінного VIP-пакету.",
-    image: vipIcon,
+    image: vipBadge,
   },
   {
     id: "6",
@@ -51,7 +62,7 @@ export const products = [
     category: "VIP",
     price: 50,
     description: "Персональний тег або колір нікнейму в ігровому чаті.",
-    image: vipIcon,
+    image: vipBadge,
   },
   {
     id: "7",
@@ -59,7 +70,15 @@ export const products = [
     category: "Одяг",
     price: 100,
     description: "Чорне худі з логотипом сервера Exodus DayZ. Тепло і стильно.",
-    image: clothingIcon,
+    image: clothingHoodie,
+    fullDescription: "Ексклюзивне тактичне худі з фірмовим логотипом Exodus DayZ. Виготовлено з високоякісних матеріалів, що забезпечують комфорт та тепло в найсуворіших умовах виживання. Темний колір ідеально підходить для маскування, а стильний дизайн з черепом та логотипом підкреслить вашу приналежність до елітної спільноти Exodus.",
+    features: [
+      "Високоякісна тканина з утепленням",
+      "Фірмовий логотип Exodus DayZ",
+      "Додаткові кишені для зберігання",
+      "Посилені шви для довговічності",
+      "Ідентичні характеристики зі стандартним худі"
+    ]
   },
   {
     id: "8",
@@ -67,7 +86,15 @@ export const products = [
     category: "Одяг",
     price: 50,
     description: "Бандана з камуфляжним узором для носіння на голові або обличчі.",
-    image: clothingIcon,
+    image: clothingBandana,
+    fullDescription: "Тактична бандана з професійним камуфляжним узором. Універсальний аксесуар для справжнього виживальника - можна носити на голові, обличчі або шиї. Виготовлена з дихаючої тканини, що забезпечує комфорт навіть під час тривалих маршів. Камуфляжний візерунок допоможе злитися з навколишнім середовищем.",
+    features: [
+      "Військовий камуфляжний узор",
+      "Багатофункціональне використання",
+      "Дихаюча тканина",
+      "Захист від пилу та сонця",
+      "Легко комбінується з іншим екіпіруванням"
+    ]
   },
   {
     id: "9",
@@ -75,7 +102,15 @@ export const products = [
     category: "Одяг",
     price: 80,
     description: "Стильна маска у вигляді черепа. Устрашаючий вигляд для вашого персонажа.",
-    image: clothingIcon,
+    image: clothingSkullMask,
+    fullDescription: "Легендарна маска-череп, що наводить жах на ворогів. Детальний дизайн кісток та реалістична текстура роблять цю маску найвидатнішим косметичним предметом в арсеналі виживальника. Ідеально поєднується з тактичним екіпіруванням та створює незабутній образ безжального мисливця.",
+    features: [
+      "Детальний дизайн черепа",
+      "Повне покриття обличчя",
+      "Залякуючий ефект у PVP",
+      "Міцна конструкція",
+      "Стандартні характеристики маски"
+    ]
   },
   {
     id: "10",
@@ -83,7 +118,7 @@ export const products = [
     category: "Одяг",
     price: 60,
     description: "Темна кепка з вишитим логотипом Exodus DayZ.",
-    image: clothingIcon,
+    image: clothingBandana,
   },
   {
     id: "11",
@@ -91,7 +126,7 @@ export const products = [
     category: "Одяг",
     price: 50,
     description: "Тактичні перчатки без пальців для брутального вигляду.",
-    image: clothingIcon,
+    image: clothingHoodie,
   },
   {
     id: "12",
@@ -99,7 +134,7 @@ export const products = [
     category: "Одяг",
     price: 60,
     description: "Традиційний платок для носіння на шиї або обличчі. Кілька кольорів.",
-    image: clothingIcon,
+    image: clothingBandana,
   },
   {
     id: "13",
@@ -107,7 +142,7 @@ export const products = [
     category: "Одяг",
     price: 120,
     description: "Брезентовий рюкзак ретро-стилю з кастомними нашивками.",
-    image: clothingIcon,
+    image: clothingHoodie,
   },
   {
     id: "14",
@@ -115,7 +150,7 @@ export const products = [
     category: "Одяг",
     price: 120,
     description: "Куртка, прикрашена патчами та значками для антуражу.",
-    image: clothingIcon,
+    image: clothingHoodie,
   },
   {
     id: "15",
@@ -123,7 +158,7 @@ export const products = [
     category: "Одяг",
     price: 80,
     description: "Брюки міського камуфляжу (сіро-чорно-білий узор).",
-    image: clothingIcon,
+    image: clothingBandana,
   },
   {
     id: "16",
@@ -131,7 +166,7 @@ export const products = [
     category: "Косметика",
     price: 70,
     description: "Можливість розмалювати обличчя камуфляжними візерунками.",
-    image: cosmeticIcon,
+    image: cosmeticSmoke,
   },
   {
     id: "17",
@@ -139,7 +174,7 @@ export const products = [
     category: "Косметика",
     price: 70,
     description: "Жахлива маска клоуна з унікальним малюнком.",
-    image: cosmeticIcon,
+    image: clothingSkullMask,
   },
   {
     id: "18",
@@ -147,7 +182,7 @@ export const products = [
     category: "Одяг",
     price: 90,
     description: "Накидка-пончо з камуфляжною розцвіткою.",
-    image: clothingIcon,
+    image: clothingBandana,
   },
   {
     id: "19",
@@ -155,7 +190,7 @@ export const products = [
     category: "Одяг",
     price: 70,
     description: "Кросівки до коліна яскравої розцвітки. Неформальний вигляд.",
-    image: clothingIcon,
+    image: clothingHoodie,
   },
   {
     id: "20",
@@ -163,7 +198,7 @@ export const products = [
     category: "Одяг",
     price: 80,
     description: "Військовий светр з високою горловиною та камуфляжем.",
-    image: clothingIcon,
+    image: clothingBandana,
   },
   {
     id: "21",
@@ -171,7 +206,15 @@ export const products = [
     category: "Косметика",
     price: 100,
     description: "Набір для перефарбування пістолета в золотий колір.",
-    image: cosmeticIcon,
+    image: cosmeticGoldenGun,
+    fullDescription: "Ексклюзивне золоте покриття для вашої зброї. Перетворіть звичайний пістолет на справжній витвір мистецтва з розкішним золотим покриттям. Блискуче покриття підкреслює ваш статус та досвід на сервері. Важливо: не впливає на характеристики зброї, тільки змінює зовнішній вигляд. Зброю потрібно знайти самостійно.",
+    features: [
+      "Розкішне золоте покриття",
+      "Підходить для різних пістолетів",
+      "Блискучий металевий ефект",
+      "Не впливає на урон чи характеристики",
+      "Показник престижу"
+    ]
   },
   {
     id: "22",
@@ -179,7 +222,7 @@ export const products = [
     category: "Косметика",
     price: 100,
     description: "Набір розцвіток для автомата M4A1 (лісовий, пустельний).",
-    image: cosmeticIcon,
+    image: cosmeticGoldenGun,
   },
   {
     id: "23",
@@ -187,7 +230,7 @@ export const products = [
     category: "Косметика",
     price: 100,
     description: "Унікальний косметичний варіант автомата з гравіюванням.",
-    image: cosmeticIcon,
+    image: cosmeticGoldenGun,
   },
   {
     id: "24",
@@ -195,7 +238,15 @@ export const products = [
     category: "Косметика",
     price: 60,
     description: "3 димові шашки різних кольорів (синій, зелений, оранжевий).",
-    image: cosmeticIcon,
+    image: cosmeticSmoke,
+    fullDescription: "Набір з трьох унікальних димових гранат різних кольорів. Створюйте ефектні димові завіси синього, зеленого та оранжевого кольорів. Ідеально підходить для сигналізації союзникам, відволікання уваги або створення видовищних моментів. Використовуйте стандартну механіку димових гранат, але з унікальними кольорами.",
+    features: [
+      "3 гранати: синя, зелена, оранжева",
+      "Густий кольоровий дим",
+      "Стандартна тривалість дії",
+      "Тактичне та декоративне використання",
+      "Рідкісні кольори"
+    ]
   },
   {
     id: "25",
@@ -203,7 +254,7 @@ export const products = [
     category: "Косметика",
     price: 80,
     description: "Сигнальний пістолет з святковим фейєрверком-конфеті.",
-    image: cosmeticIcon,
+    image: cosmeticSmoke,
   },
   {
     id: "26",
@@ -211,7 +262,7 @@ export const products = [
     category: "Косметика",
     price: 80,
     description: "Колекція піротехніки для запуску на святах.",
-    image: cosmeticIcon,
+    image: cosmeticSmoke,
   },
   {
     id: "27",
@@ -219,7 +270,7 @@ export const products = [
     category: "Косметика",
     price: 60,
     description: "Набір балончиків для перефарбування зброї в нетипові кольори.",
-    image: cosmeticIcon,
+    image: cosmeticSmoke,
   },
   {
     id: "28",
@@ -227,7 +278,7 @@ export const products = [
     category: "Косметика",
     price: 90,
     description: "Спрей для нанесення кастомного графіті на стіни.",
-    image: cosmeticIcon,
+    image: cosmeticSmoke,
   },
   {
     id: "29",
@@ -235,7 +286,15 @@ export const products = [
     category: "Транспорт",
     price: 300,
     description: "Послуга перефарбування вашого авто в унікальний колір або камуфляж.",
-    image: vehicleIcon,
+    image: vehicleCustom,
+    fullDescription: "Зробіть свій транспорт по-справжньому унікальним! Професійне кастомне розфарбування дозволяє вибрати будь-який колір або камуфляжний візерунок для вашого автомобіля. Від агресивного військового камуфляжу до яскравих гоночних розфарбувань - реалізуйте будь-яку вашу ідею. Нанесіть логотип клану, номери або унікальні патерни.",
+    features: [
+      "Будь-який колір на вибір",
+      "Камуфляжні візерунки",
+      "Можливість додати логотип клану",
+      "Професійне нанесення",
+      "Не впливає на характеристики авто"
+    ]
   },
   {
     id: "30",
@@ -243,7 +302,7 @@ export const products = [
     category: "Транспорт",
     price: 200,
     description: "Комплект неонових вогнів для встановлення під автомобілем.",
-    image: vehicleIcon,
+    image: vehicleCustom,
   },
   {
     id: "31",
@@ -251,7 +310,7 @@ export const products = [
     category: "Транспорт",
     price: 150,
     description: "Унікальний звуковий сигнал для вашого авто.",
-    image: vehicleIcon,
+    image: vehicleCustom,
   },
   {
     id: "32",
@@ -259,7 +318,7 @@ export const products = [
     category: "Транспорт",
     price: 150,
     description: "Користувацький номер для автомобіля (до 6 символів).",
-    image: vehicleIcon,
+    image: vehicleCustom,
   },
   {
     id: "33",
@@ -267,7 +326,7 @@ export const products = [
     category: "Транспорт",
     price: 100,
     description: 'Маленька фігурка на приборну панель авто.',
-    image: vehicleIcon,
+    image: vehicleCustom,
   },
   {
     id: "34",
@@ -275,7 +334,7 @@ export const products = [
     category: "Транспорт",
     price: 100,
     description: "Колекція декоративних стікерів для кузова транспорту.",
-    image: vehicleIcon,
+    image: vehicleCustom,
   },
   {
     id: "35",
@@ -283,7 +342,15 @@ export const products = [
     category: "Музичні кассети",
     price: 50,
     description: "Аудіокасета з підбіркою класичних рок-хітів (~20 пісень).",
-    image: cassetteIcon,
+    image: cassetteRock,
+    fullDescription: "Легендарна колекція класичного року на винтажній аудіокасеті. Близько 20 найкращих рок-хітів, що допоможуть підняти бойовий дух під час виживання. Від важкого металу до мелодійного року - ідеальний саундтрек для постапокаліпсису. Касету можна програвати на портативному плеєрі або автомагнітолі.",
+    features: [
+      "~20 класичних рок-композицій",
+      "Висока якість звуку",
+      "Сумісність з усіма плеєрами",
+      "Винтажний дизайн касети",
+      "Атмосферне доповнення до геймплею"
+    ]
   },
   {
     id: "36",
@@ -291,7 +358,7 @@ export const products = [
     category: "Музичні кассети",
     price: 50,
     description: "Касета зі збіркою популярних хітів 2000-х років.",
-    image: cassetteIcon,
+    image: cassetteRock,
   },
   {
     id: "37",
@@ -299,7 +366,7 @@ export const products = [
     category: "Музичні кассети",
     price: 50,
     description: "Касета з електронною музикою (техно/хаус).",
-    image: cassetteIcon,
+    image: cassetteRock,
   },
   {
     id: "38",
@@ -307,7 +374,7 @@ export const products = [
     category: "Музичні кассети",
     price: 50,
     description: "Ексклюзивна касета з підбіркою українських рок-виконавців.",
-    image: cassetteIcon,
+    image: cassetteRock,
   },
   {
     id: "39",
@@ -315,7 +382,7 @@ export const products = [
     category: "Музичні кассети",
     price: 50,
     description: "Аудіокасета з записами класичної музики.",
-    image: cassetteIcon,
+    image: cassetteRock,
   },
   {
     id: "40",
@@ -323,6 +390,6 @@ export const products = [
     category: "Музичні кассети",
     price: 100,
     description: "Пристрій для програвання касет. Працює від батарейок.",
-    image: cassetteIcon,
+    image: cassetteRock,
   },
 ];
