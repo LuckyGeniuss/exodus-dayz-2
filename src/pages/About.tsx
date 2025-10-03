@@ -5,7 +5,7 @@ import { Shield, Users, Zap, Trophy } from "lucide-react";
 const About = () => {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header onCartOpen={() => {}} cartItemCount={0} />
       
       {/* Hero Section */}
       <section className="relative py-20 overflow-hidden">

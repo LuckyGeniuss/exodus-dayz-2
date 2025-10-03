@@ -14,7 +14,7 @@ const ProductDetail = () => {
   if (!product) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
+        <Header onCartOpen={() => {}} cartItemCount={0} />
         <div className="container mx-auto px-4 py-20 text-center">
           <h1 className="text-3xl font-bold mb-4">Товар не знайдено</h1>
           <p className="text-muted-foreground mb-8">На жаль, цей товар не існує або був видалений</p>
@@ -30,7 +30,7 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header onCartOpen={() => {}} cartItemCount={0} />
       
       <div className="container mx-auto px-4 py-12">
         <Button 

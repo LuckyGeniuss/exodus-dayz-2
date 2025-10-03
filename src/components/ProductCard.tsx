@@ -16,9 +16,10 @@ export interface Product {
 
 interface ProductCardProps {
   product: Product;
+  onAddToCart: (productId: string) => void;
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
   return (
     <Link to={`/product/${product.id}`}>
       <Card className="overflow-hidden transition-all hover:shadow-[var(--shadow-elevated)] hover:-translate-y-1 bg-gradient-to-br from-card to-card/80 border-border h-full">
@@ -47,9 +48,16 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">
-          <Button className="w-full" variant="default">
+          <Button 
+            className="w-full" 
+            variant="default"
+            onClick={(e) => {
+              e.preventDefault();
+              onAddToCart(product.id);
+            }}
+          >
             <ShoppingCart className="mr-2 h-4 w-4" />
-            Придбати
+            До кошика
           </Button>
         </CardFooter>
       </Card>

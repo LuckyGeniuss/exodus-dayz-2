@@ -1,14 +1,116 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import VeteranBanner from "@/components/VeteranBanner";
 import CategoryFilter, { Category } from "@/components/CategoryFilter";
 import ProductCard from "@/components/ProductCard";
+import CartDrawer from "@/components/cart/CartDrawer";
 import Footer from "@/components/Footer";
 import { products } from "@/data/products";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Index = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<Category>("all");
+  const [cartOpen, setCartOpen] = useState(false);
+  const [cartItems, setCartItems] = useState<Array<{ productId: string; quantity: number }>>([]);
+
+  useEffect(() => {
+    if (user) {
+      fetchCart();
+    } else {
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        setCartItems(JSON.parse(savedCart));
+      }
+    }
+  }, [user]);
+
+  const fetchCart = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('cart_items')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (data && !error) {
+      setCartItems(data.map(item => ({
+        productId: item.product_id,
+        quantity: item.quantity
+      })));
+    }
+  };
+
+  const addToCart = async (productId: string) => {
+    const existingItem = cartItems.find(item => item.productId === productId);
+    
+    if (existingItem) {
+      await updateCartQuantity(productId, existingItem.quantity + 1);
+    } else {
+      const newItems = [...cartItems, { productId, quantity: 1 }];
+      setCartItems(newItems);
+
+      if (user) {
+        await supabase.from('cart_items').insert({
+          user_id: user.id,
+          product_id: productId,
+          quantity: 1
+        });
+      } else {
+        localStorage.setItem('cart', JSON.stringify(newItems));
+      }
+      
+      toast.success('Товар додано до кошика');
+    }
+  };
+
+  const updateCartQuantity = async (productId: string, quantity: number) => {
+    const newItems = cartItems.map(item =>
+      item.productId === productId ? { ...item, quantity } : item
+    );
+    setCartItems(newItems);
+
+    if (user) {
+      await supabase
+        .from('cart_items')
+        .update({ quantity })
+        .eq('user_id', user.id)
+        .eq('product_id', productId);
+    } else {
+      localStorage.setItem('cart', JSON.stringify(newItems));
+    }
+  };
+
+  const removeFromCart = async (productId: string) => {
+    const newItems = cartItems.filter(item => item.productId !== productId);
+    setCartItems(newItems);
+
+    if (user) {
+      await supabase
+        .from('cart_items')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('product_id', productId);
+    } else {
+      localStorage.setItem('cart', JSON.stringify(newItems));
+    }
+    
+    toast.success('Товар видалено з кошика');
+  };
+
+  const handleCheckout = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    toast.info('Оформлення замовлення буде додано незабаром');
+    // TODO: Implement checkout flow
+  };
 
   const categoryMap: Record<string, Category> = {
     "VIP": "vip",
@@ -30,7 +132,19 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header 
+        onCartOpen={() => setCartOpen(true)} 
+        cartItemCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+      />
+      
+      <CartDrawer
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}
+        items={cartItems}
+        onUpdateQuantity={updateCartQuantity}
+        onRemove={removeFromCart}
+        onCheckout={handleCheckout}
+      />
       <Hero />
       <VeteranBanner />
       
@@ -48,9 +162,13 @@ const Index = () => {
         <CategoryFilter onCategoryChange={setSelectedCategory} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+            {filteredProducts.map((product) => (
+              <ProductCard 
+                key={product.id} 
+                product={product}
+                onAddToCart={addToCart}
+              />
+            ))}
         </div>
 
         {filteredProducts.length === 0 && (

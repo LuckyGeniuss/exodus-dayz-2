@@ -8,7 +8,7 @@ import { Mail, MessageSquare, MapPin } from "lucide-react";
 const Contact = () => {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header onCartOpen={() => {}} cartItemCount={0} />
       
       <div className="container mx-auto px-4 py-20">
         <div className="max-w-5xl mx-auto">
