@@ -108,8 +108,8 @@ const Index = () => {
       navigate('/auth');
       return;
     }
-    toast.info('Оформлення замовлення буде додано незабаром');
-    // TODO: Implement checkout flow
+    setCartOpen(false);
+    navigate('/checkout');
   };
 
   const categoryMap: Record<string, Category> = {
