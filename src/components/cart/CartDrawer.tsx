@@ -123,7 +123,11 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onRemove, onChecko
               <Button 
                 className="w-full" 
                 size="lg"
-                onClick={onCheckout}
+                onClick={() => {
+                  if (user) {
+                    onCheckout();
+                  }
+                }}
                 disabled={!user}
               >
                 {user ? 'Оформити замовлення' : 'Увійдіть для покупки'}
