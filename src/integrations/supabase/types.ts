@@ -142,6 +142,36 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          image: string | null
+          name: string
+          price: number
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id: string
+          image?: string | null
+          name: string
+          price: number
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image?: string | null
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -207,6 +237,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      safe_deduct_balance: {
+        Args: { amount: number; user_id: string }
         Returns: boolean
       }
     }

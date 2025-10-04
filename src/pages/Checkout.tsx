@@ -1,20 +1,27 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { z } from 'zod';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
+import { Loader2, CreditCard, Wallet, Banknote, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
-import { ShoppingCart, CreditCard, Wallet } from 'lucide-react';
-import { products } from '@/data/products';
+
+// Validation schema for cart items
+const cartItemSchema = z.object({
+  product_id: z.string(),
+  quantity: z.number().positive(),
+});
 
 const Checkout = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState<Array<{ productId: string; quantity: number }>>([]);
+  const [cartItems, setCartItems] = useState<any[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'usdt' | 'balance'>('card');
   const [profile, setProfile] = useState<any>(null);
   const [processing, setProcessing] = useState(false);
@@ -40,8 +47,14 @@ const Checkout = () => {
       .select('*')
       .eq('user_id', user.id);
 
-    if (data && !error) {
-      setCartItems(data.map(item => ({ productId: item.product_id, quantity: item.quantity })));
+    if (error) {
+      console.error('Error fetching cart:', error);
+      toast.error('Не вдалося завантажити кошик');
+      return;
+    }
+
+    if (data) {
+      setCartItems(data);
     }
   };
 
@@ -54,43 +67,73 @@ const Checkout = () => {
       .eq('id', user.id)
       .single();
 
-    if (data && !error) {
+    if (error) {
+      console.error('Error fetching profile:', error);
+      return;
+    }
+
+    if (data) {
       setProfile(data);
     }
   };
 
   const total = cartItems.reduce((sum, item) => {
-    const product = products.find(p => p.id === item.productId);
-    return sum + (product?.price || 0) * item.quantity;
+    return sum + (parseFloat(item.product_price || 0) * item.quantity);
   }, 0);
 
-  const discount = profile?.is_veteran ? total * 0.5 : 0;
+  const discount = profile?.is_veteran ? total * 0.1 : 0;
   const finalTotal = total - discount;
 
   const handleCheckout = async () => {
-    if (!user || cartItems.length === 0) return;
+    if (!user) return;
+
+    // Validate cart items before sending
+    try {
+      cartItems.forEach((item) => {
+        cartItemSchema.parse({
+          product_id: item.product_id,
+          quantity: item.quantity,
+        });
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error('Невірні дані кошика');
+        console.error('Cart validation error:', error);
+        return;
+      }
+    }
+
+    if (cartItems.length === 0) {
+      toast.error('Кошик порожній');
+      return;
+    }
 
     setProcessing(true);
     try {
+      console.log('Sending order to server:', {
+        itemsCount: cartItems.length,
+        paymentMethod
+      });
+
       const { data, error } = await supabase.functions.invoke('create-order', {
         body: {
-          items: cartItems.map(item => {
-            const product = products.find(p => p.id === item.productId);
-            return {
-              product_id: item.productId,
-              product_name: product?.name || '',
-              product_price: product?.price || 0,
-              quantity: item.quantity,
-            };
-          }),
-          payment_method: paymentMethod,
-          total_amount: total,
-          discount_amount: discount,
-          final_amount: finalTotal,
+          items: cartItems.map(item => ({
+            product: {
+              id: item.product_id,
+              name: item.product_name || '',
+              price: parseFloat(item.product_price || 0),
+            },
+            quantity: item.quantity,
+          })),
+          paymentMethod,
         },
       });
 
       if (error) throw error;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       // Clear cart after successful order
       await supabase
@@ -101,6 +144,7 @@ const Checkout = () => {
       toast.success('Замовлення успішно створено!');
       navigate('/orders');
     } catch (error: any) {
+      console.error('Checkout error:', error);
       toast.error(error.message || 'Помилка при створенні замовлення');
     } finally {
       setProcessing(false);
@@ -108,7 +152,11 @@ const Checkout = () => {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Завантаження...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   if (cartItems.length === 0) {
@@ -136,19 +184,14 @@ const Checkout = () => {
               <CardTitle>Товари</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {cartItems.map((item) => {
-                const product = products.find(p => p.id === item.productId);
-                if (!product) return null;
-
-                return (
-                  <div key={item.productId} className="flex justify-between text-sm">
-                    <span>
-                      {product.name} × {item.quantity}
-                    </span>
-                    <span>{(product.price * item.quantity).toFixed(2)} ₴</span>
-                  </div>
-                );
-              })}
+              {cartItems.map((item) => (
+                <div key={item.id} className="flex justify-between text-sm">
+                  <span>
+                    {item.product_name || item.product_id} × {item.quantity}
+                  </span>
+                  <span>{(parseFloat(item.product_price || 0) * item.quantity).toFixed(2)} ₴</span>
+                </div>
+              ))}
             </CardContent>
           </Card>
 
@@ -169,7 +212,7 @@ const Checkout = () => {
                 <div className="flex items-center space-x-2 mb-3">
                   <RadioGroupItem value="usdt" id="usdt" />
                   <Label htmlFor="usdt" className="flex items-center gap-2 cursor-pointer">
-                    <Wallet className="h-4 w-4" />
+                    <Banknote className="h-4 w-4" />
                     USDT (Crypto)
                   </Label>
                 </div>
@@ -199,16 +242,17 @@ const Checkout = () => {
                   <span>Сума:</span>
                   <span>{total.toFixed(2)} ₴</span>
                 </div>
-                {profile?.is_veteran && (
+                {profile?.is_veteran && discount > 0 && (
                   <div className="flex justify-between text-sm text-green-600">
                     <span className="flex items-center gap-2">
                       Знижка ветерана АТО/ООС:
-                      <Badge variant="secondary">-50%</Badge>
+                      <Badge variant="secondary">-10%</Badge>
                     </span>
                     <span>-{discount.toFixed(2)} ₴</span>
                   </div>
                 )}
-                <div className="border-t pt-2 flex justify-between text-lg font-bold">
+                <Separator />
+                <div className="flex justify-between text-lg font-bold">
                   <span>До сплати:</span>
                   <span>{finalTotal.toFixed(2)} ₴</span>
                 </div>
@@ -220,7 +264,14 @@ const Checkout = () => {
                 onClick={handleCheckout}
                 disabled={processing}
               >
-                {processing ? 'Обробка...' : 'Оплатити'}
+                {processing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Обробка...
+                  </>
+                ) : (
+                  'Оплатити'
+                )}
               </Button>
             </CardContent>
           </Card>

@@ -26,25 +26,136 @@ Deno.serve(async (req) => {
     } = await supabaseClient.auth.getUser();
 
     if (!user) {
-      throw new Error('Unauthorized');
+      console.error('Unauthorized: No user found');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      );
     }
 
-    const { items, payment_method, total_amount, discount_amount, final_amount } = await req.json();
+    const { items, paymentMethod } = await req.json();
+    
+    console.log('Creating order:', { 
+      userId: user.id, 
+      itemsCount: items?.length,
+      paymentMethod
+    });
 
-    console.log('Creating order for user:', user.id);
+    // Validate items array
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      console.error('Invalid items array');
+      return new Response(
+        JSON.stringify({ error: 'Invalid items array' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
+    }
 
-    // Get user profile to check balance if paying with balance
-    if (payment_method === 'balance') {
-      const { data: profile, error: profileError } = await supabaseClient
-        .from('profiles')
-        .select('balance')
-        .eq('id', user.id)
-        .single();
+    // Fetch products from database for server-side price validation
+    const productIds = items.map((item: any) => item.product.id);
+    const { data: products, error: productsError } = await supabaseClient
+      .from('products')
+      .select('*')
+      .in('id', productIds);
 
-      if (profileError) throw profileError;
+    if (productsError || !products) {
+      console.error('Error fetching products:', productsError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to validate products' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
+    }
 
-      if (!profile || profile.balance < final_amount) {
-        throw new Error('Insufficient balance');
+    // Fetch user profile for veteran status
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('is_veteran, balance')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch user profile' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
+    }
+
+    // Calculate total amount server-side
+    let totalAmount = 0;
+    const validatedItems = [];
+
+    for (const item of items) {
+      const product = products.find(p => p.id === item.product.id);
+      if (!product) {
+        console.error('Product not found:', item.product.id);
+        return new Response(
+          JSON.stringify({ error: `Product not found: ${item.product.id}` }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
+      }
+
+      const quantity = parseInt(item.quantity);
+      if (isNaN(quantity) || quantity <= 0) {
+        console.error('Invalid quantity:', item.quantity);
+        return new Response(
+          JSON.stringify({ error: 'Invalid quantity' }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
+      }
+
+      totalAmount += parseFloat(product.price) * quantity;
+      validatedItems.push({
+        product_id: product.id,
+        product_name: product.name,
+        product_price: product.price,
+        quantity: quantity
+      });
+    }
+
+    // Apply veteran discount (10%)
+    const isVeteran = profile?.is_veteran || false;
+    const discountAmount = isVeteran ? totalAmount * 0.1 : 0;
+    const finalAmount = totalAmount - discountAmount;
+
+    console.log('Server-calculated prices:', {
+      totalAmount,
+      discountAmount,
+      finalAmount,
+      isVeteran
+    });
+
+    // If payment method is balance, verify sufficient balance
+    if (paymentMethod === 'balance') {
+      if (!profile || parseFloat(profile.balance) < finalAmount) {
+        console.error('Insufficient balance:', {
+          required: finalAmount,
+          available: profile?.balance || 0
+        });
+        return new Response(
+          JSON.stringify({ error: 'Insufficient balance' }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
       }
     }
 
@@ -53,64 +164,88 @@ Deno.serve(async (req) => {
       .from('orders')
       .insert({
         user_id: user.id,
-        total_amount,
-        discount_amount,
-        final_amount,
-        payment_method,
-        payment_status: payment_method === 'balance' ? 'completed' : 'pending',
+        total_amount: totalAmount,
+        discount_amount: discountAmount,
+        final_amount: finalAmount,
+        payment_method: paymentMethod,
+        payment_status: paymentMethod === 'balance' ? 'completed' : 'pending',
       })
       .select()
       .single();
 
-    if (orderError) throw orderError;
+    if (orderError) {
+      console.error('Error creating order:', orderError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to create order' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
+    }
 
     console.log('Order created:', order.id);
 
-    // Create order items
-    const orderItems = items.map((item: any) => ({
+    // Insert order items using validated data
+    const orderItemsData = validatedItems.map((item) => ({
       order_id: order.id,
-      product_id: item.product_id,
-      product_name: item.product_name,
-      product_price: item.product_price,
-      quantity: item.quantity,
+      ...item
     }));
 
     const { error: itemsError } = await supabaseClient
       .from('order_items')
-      .insert(orderItems);
+      .insert(orderItemsData);
 
-    if (itemsError) throw itemsError;
+    if (itemsError) {
+      console.error('Error creating order items:', itemsError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to create order items' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
+    }
 
     console.log('Order items created');
 
-    // If paying with balance, deduct from user balance and create transaction
-    if (payment_method === 'balance') {
-      const { error: balanceError } = await supabaseClient.rpc('deduct_balance', {
+    // If payment method is balance, safely deduct from user's balance
+    if (paymentMethod === 'balance') {
+      const { data: deductSuccess, error: deductError } = await supabaseClient.rpc('safe_deduct_balance', {
         user_id: user.id,
-        amount: final_amount,
+        amount: finalAmount,
       });
 
-      if (balanceError) {
-        console.error('Balance deduction error:', balanceError);
-        throw balanceError;
+      if (deductError || !deductSuccess) {
+        console.error('Error deducting balance:', deductError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to deduct balance. Insufficient funds or transaction error.' }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
+          }
+        );
       }
+
+      console.log('Balance deducted successfully');
 
       // Create transaction record
       const { error: transactionError } = await supabaseClient
         .from('balance_transactions')
         .insert({
           user_id: user.id,
-          amount: -final_amount,
+          amount: -finalAmount,
           type: 'purchase',
           status: 'completed',
           description: `Order #${order.id.slice(0, 8)}`,
+          payment_method: 'balance',
         });
 
       if (transactionError) {
         console.error('Transaction creation error:', transactionError);
       }
 
-      console.log('Balance deducted and transaction created');
+      console.log('Transaction record created');
     }
 
     return new Response(

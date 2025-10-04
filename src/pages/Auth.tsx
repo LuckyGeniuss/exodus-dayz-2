@@ -1,13 +1,22 @@
 import { useState } from 'react';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useNavigate } from 'react-router-dom';
+import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { toast } from 'sonner';
+
+// Validation schemas
+const emailSchema = z.string().trim().email({ message: 'Невірна адреса електронної пошти' });
+const passwordSchema = z.string().min(6, { message: 'Пароль повинен містити мінімум 6 символів' }).max(100, { message: 'Пароль занадто довгий' });
+const usernameSchema = z.string().trim().min(3, { message: 'Ім\'я користувача повинно містити мінімум 3 символи' }).max(50, { message: 'Ім\'я користувача занадто довге' });
 
 const Auth = () => {
   const { signIn, signUp } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   
   // Login state
@@ -21,9 +30,24 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate inputs
+    try {
+      emailSchema.parse(loginEmail);
+      passwordSchema.parse(loginPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       await signIn(loginEmail, loginPassword);
+      navigate('/');
+    } catch (error) {
+      console.error('Login error:', error);
     } finally {
       setLoading(false);
     }
@@ -31,9 +55,25 @@ const Auth = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate inputs
+    try {
+      emailSchema.parse(signupEmail);
+      passwordSchema.parse(signupPassword);
+      usernameSchema.parse(signupUsername);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       await signUp(signupEmail, signupPassword, signupUsername);
+      navigate('/');
+    } catch (error) {
+      console.error('Signup error:', error);
     } finally {
       setLoading(false);
     }
@@ -77,6 +117,7 @@ const Auth = () => {
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     required
+                    minLength={6}
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
@@ -96,6 +137,8 @@ const Auth = () => {
                     value={signupUsername}
                     onChange={(e) => setSignupUsername(e.target.value)}
                     required
+                    minLength={3}
+                    maxLength={50}
                   />
                 </div>
                 <div className="space-y-2">
@@ -119,6 +162,7 @@ const Auth = () => {
                     onChange={(e) => setSignupPassword(e.target.value)}
                     required
                     minLength={6}
+                    maxLength={100}
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
