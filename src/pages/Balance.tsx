@@ -9,11 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { Wallet, CreditCard, Coins } from 'lucide-react';
 import { toast } from 'sonner';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import SteamAuthButton from '@/components/auth/SteamAuthButton';
 
 const Balance = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [balance, setBalance] = useState(0);
+  const [steamId, setSteamId] = useState<string | null>(null);
   const [depositAmount, setDepositAmount] = useState('');
   const [transactions, setTransactions] = useState<any[]>([]);
 
@@ -35,12 +39,13 @@ const Balance = () => {
     
     const { data, error } = await supabase
       .from('profiles')
-      .select('balance')
+      .select('balance, steam_id')
       .eq('id', user.id)
       .single();
 
     if (data && !error) {
       setBalance(Number(data.balance) || 0);
+      setSteamId(data.steam_id);
     }
   };
 
@@ -74,26 +79,57 @@ const Balance = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <h1 className="text-4xl font-military mb-8">Мій баланс</h1>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
+        <h1 className="text-4xl font-military mb-8">Мій баланс</h1>
 
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wallet className="h-6 w-6" />
-            Поточний баланс
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-4xl font-bold text-primary">{balance.toFixed(2)} ₴</div>
-        </CardContent>
-      </Card>
+        <div className="grid gap-6 md:grid-cols-2 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wallet className="h-6 w-6" />
+                Поточний баланс
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-4xl font-bold text-primary">{balance.toFixed(2)} ₴</div>
+            </CardContent>
+          </Card>
 
-      <Tabs defaultValue="deposit" className="mb-8">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="deposit">Поповнити</TabsTrigger>
-          <TabsTrigger value="history">Історія</TabsTrigger>
-        </TabsList>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2a10 10 0 0 0-10 10 10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2zm0 18a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/>
+                  <path d="M15.5 8.5a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5 2.5 2.5 0 0 0-2.5-2.5zm-7-1a4 4 0 0 0-4 4 4 4 0 0 0 4 4l2-2a2 2 0 0 1-2-2 2 2 0 0 1 2-2z"/>
+                </svg>
+                Steam ID
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {steamId ? (
+                <div>
+                  <div className="text-lg font-mono text-muted-foreground mb-2">{steamId}</div>
+                  <p className="text-sm text-green-600">✓ Steam підключено</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Підключіть Steam для автоматичної доставки товарів
+                  </p>
+                  <SteamAuthButton userId={user?.id} onSuccess={fetchBalance} />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="deposit" className="mb-8">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="deposit">Поповнити</TabsTrigger>
+            <TabsTrigger value="history">Історія</TabsTrigger>
+          </TabsList>
 
         <TabsContent value="deposit" className="space-y-4">
           <Card>
@@ -191,6 +227,8 @@ const Balance = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      </main>
+      <Footer />
     </div>
   );
 };
