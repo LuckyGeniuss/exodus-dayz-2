@@ -1,7 +1,8 @@
-import { ShoppingCart, User, LogOut, Wallet, Package, Menu } from "lucide-react";
+import { ShoppingCart, User, LogOut, Wallet, Package, Menu, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useAdmin } from "@/hooks/useAdmin";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,12 +17,13 @@ import {
 } from "@/components/ui/sheet";
 
 interface HeaderProps {
-  onCartOpen: () => void;
-  cartItemCount: number;
+  onCartOpen?: () => void;
+  cartItemCount?: number;
 }
 
-const Header = ({ onCartOpen, cartItemCount }: HeaderProps) => {
+const Header = ({ onCartOpen, cartItemCount = 0 }: HeaderProps) => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const navigate = useNavigate();
 
   return (
@@ -51,19 +53,21 @@ const Header = ({ onCartOpen, cartItemCount }: HeaderProps) => {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="relative"
-              onClick={onCartOpen}
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {cartItemCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-accent text-accent-foreground rounded-full w-5 h-5 text-xs flex items-center justify-center">
-                  {cartItemCount > 9 ? '9+' : cartItemCount}
-                </span>
-              )}
-            </Button>
+            {onCartOpen && (
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="relative"
+                onClick={onCartOpen}
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-accent text-accent-foreground rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                    {cartItemCount > 9 ? '9+' : cartItemCount}
+                  </span>
+                )}
+              </Button>
+            )}
 
             {user ? (
               <DropdownMenu>
@@ -73,6 +77,15 @@ const Header = ({ onCartOpen, cartItemCount }: HeaderProps) => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuItem onClick={() => navigate('/admin')}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        Адмін панель
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem onClick={() => navigate('/balance')}>
                     <Wallet className="mr-2 h-4 w-4" />
                     Баланс
