@@ -70,8 +70,8 @@ const Balance = () => {
       return;
     }
 
-    if (method === 'card') {
-      try {
+    try {
+      if (method === 'card') {
         const { data, error } = await supabase.functions.invoke('wayforpay-payment', {
           body: { amount: Number(depositAmount) },
         });
@@ -84,13 +84,23 @@ const Balance = () => {
         } else {
           toast.error('Помилка створення платежу');
         }
-      } catch (error) {
-        console.error('Payment error:', error);
-        toast.error('Помилка створення платежу');
+      } else {
+        const { data, error } = await supabase.functions.invoke('nowpayments-payment', {
+          body: { amount: Number(depositAmount) },
+        });
+
+        if (error) throw error;
+
+        if (data.payment_url) {
+          // Redirect to NOWPayments payment page
+          window.location.href = data.payment_url;
+        } else {
+          toast.error('Помилка створення платежу');
+        }
       }
-    } else {
-      toast.info('Поповнення через USDT буде додано незабаром');
-      // TODO: Implement NOWPayments integration
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error('Помилка створення платежу');
     }
   };
 

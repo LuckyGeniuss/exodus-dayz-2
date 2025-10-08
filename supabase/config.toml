@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.wayforpay-payment]
 verify_jwt = false
+
+[functions.nowpayments-payment]
+verify_jwt = false
