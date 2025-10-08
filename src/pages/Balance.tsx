@@ -70,8 +70,28 @@ const Balance = () => {
       return;
     }
 
-    toast.info(`Поповнення через ${method === 'card' ? 'картку' : 'USDT'} буде додано незабаром`);
-    // TODO: Implement payment gateway integration
+    if (method === 'card') {
+      try {
+        const { data, error } = await supabase.functions.invoke('wayforpay-payment', {
+          body: { amount: Number(depositAmount) },
+        });
+
+        if (error) throw error;
+
+        if (data.url) {
+          // Redirect to Wayforpay payment page
+          window.location.href = data.url;
+        } else {
+          toast.error('Помилка створення платежу');
+        }
+      } catch (error) {
+        console.error('Payment error:', error);
+        toast.error('Помилка створення платежу');
+      }
+    } else {
+      toast.info('Поповнення через USDT буде додано незабаром');
+      // TODO: Implement NOWPayments integration
+    }
   };
 
   if (loading) {

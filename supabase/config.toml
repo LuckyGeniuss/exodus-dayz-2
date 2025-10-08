@@ -2,3 +2,6 @@ project_id = "eababvkyjfkhqmjkcxiy"
 
 [functions.steam-auth]
 verify_jwt = false
+
+[functions.wayforpay-payment]
+verify_jwt = false
