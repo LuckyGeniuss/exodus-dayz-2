@@ -6,6 +6,10 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
+  const startTime = Date.now();
+  const ipAddress = req.headers.get('x-forwarded-for') || 'unknown';
+  const userAgent = req.headers.get('user-agent') || 'unknown';
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -27,11 +31,55 @@ Deno.serve(async (req) => {
 
     if (!user) {
       console.error('Unauthorized: No user found');
+      await supabaseClient.from('edge_function_logs').insert({
+        function_name: 'create-order',
+        operation: 'order_creation',
+        status: 'error',
+        error_message: 'Unauthorized',
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        duration_ms: Date.now() - startTime,
+      });
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 401,
+        }
+      );
+    }
+
+    // Check rate limit: 20 orders per 5 minutes
+    const serviceClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    
+    const { data: rateLimitOk } = await serviceClient.rpc('check_rate_limit', {
+      _user_id: user.id,
+      _ip_address: ipAddress,
+      _endpoint: 'create-order',
+      _max_requests: 20,
+      _window_minutes: 5,
+    });
+
+    if (!rateLimitOk) {
+      console.warn('Rate limit exceeded for user:', user.id);
+      await supabaseClient.from('edge_function_logs').insert({
+        user_id: user.id,
+        function_name: 'create-order',
+        operation: 'order_creation',
+        status: 'error',
+        error_message: 'Rate limit exceeded',
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        duration_ms: Date.now() - startTime,
+      });
+      return new Response(
+        JSON.stringify({ error: 'Too many orders. Please try again later.' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 429,
         }
       );
     }
@@ -248,6 +296,18 @@ Deno.serve(async (req) => {
       console.log('Transaction record created');
     }
 
+    await supabaseClient.from('edge_function_logs').insert({
+      user_id: user.id,
+      function_name: 'create-order',
+      operation: 'order_creation',
+      status: 'success',
+      request_data: { itemsCount: items?.length, paymentMethod, finalAmount },
+      response_data: { order_id: order.id, payment_status: order.payment_status },
+      ip_address: ipAddress,
+      user_agent: userAgent,
+      duration_ms: Date.now() - startTime,
+    });
+
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -262,6 +322,32 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error creating order:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Try to log error if we have supabase client
+    try {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        {
+          global: {
+            headers: { Authorization: req.headers.get('Authorization')! },
+          },
+        }
+      );
+      
+      await supabaseClient.from('edge_function_logs').insert({
+        function_name: 'create-order',
+        operation: 'order_creation',
+        status: 'error',
+        error_message: errorMessage,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        duration_ms: Date.now() - startTime,
+      });
+    } catch (logError) {
+      console.error('Failed to log error:', logError);
+    }
+    
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { 

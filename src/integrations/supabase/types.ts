@@ -71,6 +71,51 @@ export type Database = {
         }
         Relationships: []
       }
+      edge_function_logs: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          function_name: string
+          id: string
+          ip_address: string | null
+          operation: string
+          request_data: Json | null
+          response_data: Json | null
+          status: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          function_name: string
+          id?: string
+          ip_address?: string | null
+          operation: string
+          request_data?: Json | null
+          response_data?: Json | null
+          status: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          function_name?: string
+          id?: string
+          ip_address?: string | null
+          operation?: string
+          request_data?: Json | null
+          response_data?: Json | null
+          status?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string | null
@@ -205,6 +250,36 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_log: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          ip_address: string | null
+          request_count: number
+          user_id: string | null
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          ip_address?: string | null
+          request_count?: number
+          user_id?: string | null
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          ip_address?: string | null
+          request_count?: number
+          user_id?: string | null
+          window_start?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -228,6 +303,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          _endpoint: string
+          _ip_address: string
+          _max_requests?: number
+          _user_id: string
+          _window_minutes?: number
+        }
+        Returns: boolean
+      }
       deduct_balance: {
         Args: { amount: number; user_id: string }
         Returns: undefined

@@ -27,6 +27,10 @@ interface NOWPaymentsCallback {
 }
 
 Deno.serve(async (req) => {
+  const startTime = Date.now();
+  const ipAddress = req.headers.get('x-forwarded-for') || 'unknown';
+  const userAgent = req.headers.get('user-agent') || 'unknown';
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -149,6 +153,15 @@ Deno.serve(async (req) => {
     if (req.method === 'POST') {
       const authHeader = req.headers.get('Authorization');
       if (!authHeader) {
+        await supabase.from('edge_function_logs').insert({
+          function_name: 'nowpayments-payment',
+          operation: 'payment_init',
+          status: 'error',
+          error_message: 'Not authenticated',
+          ip_address: ipAddress,
+          user_agent: userAgent,
+          duration_ms: Date.now() - startTime,
+        });
         return new Response(
           JSON.stringify({ error: 'Not authenticated' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -159,9 +172,45 @@ Deno.serve(async (req) => {
       const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
       if (userError || !user) {
+        await supabase.from('edge_function_logs').insert({
+          function_name: 'nowpayments-payment',
+          operation: 'payment_init',
+          status: 'error',
+          error_message: 'Invalid authentication',
+          ip_address: ipAddress,
+          user_agent: userAgent,
+          duration_ms: Date.now() - startTime,
+        });
         return new Response(
           JSON.stringify({ error: 'Invalid authentication' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Check rate limit: 5 payment attempts per minute
+      const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+        _user_id: user.id,
+        _ip_address: ipAddress,
+        _endpoint: 'nowpayments-payment',
+        _max_requests: 5,
+        _window_minutes: 1,
+      });
+
+      if (!rateLimitOk) {
+        console.warn('Rate limit exceeded for user:', user.id);
+        await supabase.from('edge_function_logs').insert({
+          user_id: user.id,
+          function_name: 'nowpayments-payment',
+          operation: 'payment_init',
+          status: 'error',
+          error_message: 'Rate limit exceeded',
+          ip_address: ipAddress,
+          user_agent: userAgent,
+          duration_ms: Date.now() - startTime,
+        });
+        return new Response(
+          JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
@@ -244,17 +293,31 @@ Deno.serve(async (req) => {
           description: `Очікування оплати через USDT`,
         });
 
+      const responseData = {
+        payment_id: paymentResult.payment_id,
+        pay_address: paymentResult.pay_address,
+        pay_amount: paymentResult.pay_amount,
+        pay_currency: paymentResult.pay_currency,
+        price_amount: amount,
+        price_currency: 'UAH',
+        order_id: orderId,
+        payment_url: `https://nowpayments.io/payment/?iid=${paymentResult.payment_id}`,
+      };
+
+      await supabase.from('edge_function_logs').insert({
+        user_id: user.id,
+        function_name: 'nowpayments-payment',
+        operation: 'payment_init',
+        status: 'success',
+        request_data: { amount, orderId },
+        response_data: responseData,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        duration_ms: Date.now() - startTime,
+      });
+
       return new Response(
-        JSON.stringify({ 
-          payment_id: paymentResult.payment_id,
-          pay_address: paymentResult.pay_address,
-          pay_amount: paymentResult.pay_amount,
-          pay_currency: paymentResult.pay_currency,
-          price_amount: amount,
-          price_currency: 'UAH',
-          order_id: orderId,
-          payment_url: `https://nowpayments.io/payment/?iid=${paymentResult.payment_id}`,
-        }),
+        JSON.stringify(responseData),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

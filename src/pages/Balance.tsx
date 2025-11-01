@@ -76,7 +76,15 @@ const Balance = () => {
           body: { amount: Number(depositAmount) },
         });
 
-        if (error) throw error;
+        if (error) {
+          // Check for specific error types
+          if (error.message?.includes('429') || error.message?.includes('Too many requests')) {
+            toast.error('Забагато запитів. Спробуйте пізніше.');
+          } else {
+            toast.error('Помилка створення платежу');
+          }
+          return;
+        }
 
         if (data.url) {
           // Redirect to Wayforpay payment page
@@ -89,7 +97,15 @@ const Balance = () => {
           body: { amount: Number(depositAmount) },
         });
 
-        if (error) throw error;
+        if (error) {
+          // Check for specific error types
+          if (error.message?.includes('429') || error.message?.includes('Too many requests')) {
+            toast.error('Забагато запитів. Спробуйте пізніше.');
+          } else {
+            toast.error('Помилка створення платежу');
+          }
+          return;
+        }
 
         if (data.payment_url) {
           // Redirect to NOWPayments payment page
@@ -100,7 +116,13 @@ const Balance = () => {
       }
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error('Помилка створення платежу');
+      const errorMessage = error instanceof Error ? error.message : '';
+      
+      if (errorMessage.includes('429') || errorMessage.includes('Too many requests')) {
+        toast.error('Забагато запитів. Спробуйте пізніше.');
+      } else {
+        toast.error('Помилка створення платежу');
+      }
     }
   };
 
