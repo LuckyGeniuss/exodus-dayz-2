@@ -10,6 +10,25 @@ const paymentRequestSchema = z.object({
   amount: z.number().positive("Amount must be positive").min(1, "Amount must be at least 1").max(1000000, "Amount cannot exceed 1,000,000"),
 });
 
+// Generate HMAC SHA-512 signature for NOWPayments IPN verification
+async function generateHmacSha512(data: string, secret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const messageData = encoder.encode(data);
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-512' },
+    false,
+    ['sign']
+  );
+
+  const signature = await crypto.subtle.sign('HMAC', key, messageData);
+  const hashArray = Array.from(new Uint8Array(signature));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 interface PaymentRequest {
   amount: number;
   userId: string;
@@ -52,9 +71,52 @@ Deno.serve(async (req) => {
 
     // Handle payment callback from NOWPayments
     if (path.includes('/callback') && req.method === 'POST') {
-      const callback: NOWPaymentsCallback = await req.json();
+      const rawBody = await req.text();
+      const callback: NOWPaymentsCallback = JSON.parse(rawBody);
       
       console.log('NOWPayments callback received:', callback);
+
+      // Verify IPN signature
+      const ipnSecret = Deno.env.get('NOWPAYMENTS_IPN_SECRET');
+      if (!ipnSecret) {
+        console.error('NOWPAYMENTS_IPN_SECRET not configured');
+        return new Response(
+          JSON.stringify({ error: 'Server configuration error' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const receivedSignature = req.headers.get('x-nowpayments-sig');
+      if (!receivedSignature) {
+        console.error('Missing x-nowpayments-sig header');
+        return new Response(
+          JSON.stringify({ error: 'Missing signature' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Sort callback parameters and generate signature
+      const sortedParams = Object.keys(callback)
+        .sort()
+        .reduce((acc, key) => {
+          acc[key] = callback[key];
+          return acc;
+        }, {} as Record<string, any>);
+
+      const expectedSignature = await generateHmacSha512(
+        JSON.stringify(sortedParams),
+        ipnSecret
+      );
+
+      if (receivedSignature !== expectedSignature) {
+        console.error('Invalid callback signature. Expected:', expectedSignature, 'Received:', receivedSignature);
+        return new Response(
+          JSON.stringify({ error: 'Invalid signature' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log('Signature verified successfully');
 
       // Extract user_id from order_id (format: "deposit_userId_timestamp")
       const orderParts = callback.order_id.split('_');
