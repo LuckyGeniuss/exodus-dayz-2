@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Package } from 'lucide-react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 const Orders = () => {
   const { user, loading } = useAuth();
@@ -63,7 +65,9 @@ const Orders = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
       <h1 className="text-4xl font-military mb-8 flex items-center gap-2">
         <Package className="h-8 w-8" />
         Мої замовлення
@@ -136,6 +140,8 @@ const Orders = () => {
           ))}
         </div>
       )}
+      </main>
+      <Footer />
     </div>
   );
 };

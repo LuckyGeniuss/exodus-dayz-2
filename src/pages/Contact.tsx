@@ -1,11 +1,44 @@
+import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, MessageSquare, MapPin } from "lucide-react";
+import { toast } from "sonner";
 
 const Contact = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!name || !email || !subject || !message) {
+      toast.error("Заповніть всі поля");
+      return;
+    }
+
+    setSending(true);
+    try {
+      // Simulate sending (in real app, would call an edge function)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success("Повідомлення надіслано! Ми відповімо вам якомога швидше.");
+      setName("");
+      setEmail("");
+      setSubject("");
+      setMessage("");
+    } catch (error) {
+      toast.error("Помилка відправки повідомлення");
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header onCartOpen={() => {}} cartItemCount={0} />
@@ -31,28 +64,47 @@ const Contact = () => {
                 </p>
               </div>
 
-              <form className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">Ім'я</label>
-                  <Input placeholder="Ваше ім'я" />
+                  <Input 
+                    placeholder="Ваше ім'я" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">Email</label>
-                  <Input type="email" placeholder="your@email.com" />
+                  <Input 
+                    type="email" 
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">Тема</label>
-                  <Input placeholder="Тема повідомлення" />
+                  <Input 
+                    placeholder="Тема повідомлення"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    required
+                  />
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">Повідомлення</label>
                   <Textarea 
                     placeholder="Ваше повідомлення..." 
                     className="min-h-[150px]"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    required
                   />
                 </div>
-                <Button type="submit" size="lg" className="w-full">
-                  Відправити повідомлення
+                <Button type="submit" size="lg" className="w-full" disabled={sending}>
+                  {sending ? "Відправляємо..." : "Відправити повідомлення"}
                 </Button>
               </form>
             </div>

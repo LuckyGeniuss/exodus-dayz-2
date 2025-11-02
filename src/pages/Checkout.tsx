@@ -11,6 +11,8 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, CreditCard, Wallet, Banknote, ShoppingCart } from 'lucide-react';
 import { toast } from 'sonner';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 // Validation schema for cart items
 const cartItemSchema = z.object({
@@ -153,28 +155,38 @@ const Checkout = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </main>
+        <Footer />
       </div>
     );
   }
 
   if (cartItems.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card>
-          <CardContent className="py-12 text-center">
-            <ShoppingCart className="h-16 w-16 mx-auto mb-4 opacity-20" />
-            <p className="text-muted-foreground mb-4">Ваш кошик порожній</p>
-            <Button onClick={() => navigate('/')}>Повернутися до магазину</Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
+          <Card>
+            <CardContent className="py-12 text-center">
+              <ShoppingCart className="h-16 w-16 mx-auto mb-4 opacity-20" />
+              <p className="text-muted-foreground mb-4">Ваш кошик порожній</p>
+              <Button onClick={() => navigate('/')}>Повернутися до магазину</Button>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
       <h1 className="text-4xl font-military mb-8">Оформлення замовлення</h1>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -277,6 +289,8 @@ const Checkout = () => {
           </Card>
         </div>
       </div>
+      </main>
+      <Footer />
     </div>
   );
 };
