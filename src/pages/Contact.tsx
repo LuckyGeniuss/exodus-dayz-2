@@ -6,6 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, MessageSquare, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Ім'я обов'язкове").max(100, "Ім'я занадто довге (максимум 100 символів)"),
+  email: z.string().trim().email("Невірний формат email").max(255, "Email занадто довгий"),
+  subject: z.string().trim().min(1, "Тема обов'язкова").max(200, "Тема занадто довга (максимум 200 символів)"),
+  message: z.string().trim().min(1, "Повідомлення обов'язкове").max(5000, "Повідомлення занадто довге (максимум 5000 символів)"),
+});
 
 const Contact = () => {
   const [name, setName] = useState("");
@@ -17,8 +25,17 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !email || !subject || !message) {
-      toast.error("Заповніть всі поля");
+    // Validate input with Zod
+    const result = contactSchema.safeParse({
+      name: name.trim(),
+      email: email.trim(),
+      subject: subject.trim(),
+      message: message.trim(),
+    });
+
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
 

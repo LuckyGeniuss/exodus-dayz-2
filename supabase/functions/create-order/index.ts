@@ -1,9 +1,22 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const orderRequestSchema = z.object({
+  items: z.array(z.object({
+    product: z.object({
+      id: z.string().min(1).max(50),
+    }),
+    quantity: z.number().int().positive().min(1).max(100),
+  })).min(1, "Order must contain at least one item").max(50, "Order cannot contain more than 50 items"),
+  paymentMethod: z.enum(['balance', 'card', 'usdt'], {
+    errorMap: () => ({ message: "Invalid payment method. Must be 'balance', 'card', or 'usdt'" })
+  }),
+});
 
 Deno.serve(async (req) => {
   const startTime = Date.now();
@@ -84,25 +97,43 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { items, paymentMethod } = await req.json();
+    const requestBody = await req.json();
     
-    console.log('Creating order:', { 
-      userId: user.id, 
-      itemsCount: items?.length,
-      paymentMethod
-    });
-
-    // Validate items array
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      console.error('Invalid items array');
+    // Validate request with Zod
+    const validationResult = orderRequestSchema.safeParse(requestBody);
+    
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      console.error('Invalid order request:', firstError);
+      await supabaseClient.from('edge_function_logs').insert({
+        user_id: user.id,
+        function_name: 'create-order',
+        operation: 'order_creation',
+        status: 'error',
+        error_message: `Validation error: ${firstError.message}`,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        duration_ms: Date.now() - startTime,
+      });
       return new Response(
-        JSON.stringify({ error: 'Invalid items array' }),
+        JSON.stringify({ 
+          error: 'Invalid order data',
+          details: firstError.message 
+        }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400,
         }
       );
     }
+
+    const { items, paymentMethod } = validationResult.data;
+    
+    console.log('Creating order:', { 
+      userId: user.id, 
+      itemsCount: items.length,
+      paymentMethod
+    });
 
     // Fetch products from database for server-side price validation
     const productIds = items.map((item: any) => item.product.id);
@@ -157,17 +188,8 @@ Deno.serve(async (req) => {
         );
       }
 
-      const quantity = parseInt(item.quantity);
-      if (isNaN(quantity) || quantity <= 0) {
-        console.error('Invalid quantity:', item.quantity);
-        return new Response(
-          JSON.stringify({ error: 'Invalid quantity' }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400,
-          }
-        );
-      }
+      // Quantity is already validated as integer by Zod, no need to parseInt
+      const quantity = item.quantity;
 
       totalAmount += parseFloat(product.price) * quantity;
       validatedItems.push({

@@ -1,9 +1,14 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const paymentRequestSchema = z.object({
+  amount: z.number().positive("Amount must be positive").min(1, "Amount must be at least 1").max(1000000, "Amount cannot exceed 1,000,000"),
+});
 
 interface PaymentRequest {
   amount: number;
@@ -214,14 +219,34 @@ Deno.serve(async (req) => {
         );
       }
 
-      const { amount }: PaymentRequest = await req.json();
-
-      if (!amount || amount <= 0) {
+      const requestBody = await req.json();
+      
+      // Validate request with Zod
+      const validationResult = paymentRequestSchema.safeParse(requestBody);
+      
+      if (!validationResult.success) {
+        const firstError = validationResult.error.errors[0];
+        console.error('Invalid payment request:', firstError);
+        await supabase.from('edge_function_logs').insert({
+          user_id: user.id,
+          function_name: 'nowpayments-payment',
+          operation: 'payment_init',
+          status: 'error',
+          error_message: `Validation error: ${firstError.message}`,
+          ip_address: ipAddress,
+          user_agent: userAgent,
+          duration_ms: Date.now() - startTime,
+        });
         return new Response(
-          JSON.stringify({ error: 'Invalid amount' }),
+          JSON.stringify({ 
+            error: 'Invalid payment data',
+            details: firstError.message 
+          }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      
+      const { amount } = validationResult.data;
 
       // Get current exchange rate UAH to USDT
       const exchangeResponse = await fetch('https://api.nowpayments.io/v1/estimate?amount=' + amount + '&currency_from=uah&currency_to=usdttrc20', {
