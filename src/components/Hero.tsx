@@ -12,18 +12,27 @@ const Hero = () => {
       </div>
       
       <div className="container relative z-10 mx-auto px-4 text-center">
-        <h1 className="mb-4 text-5xl md:text-7xl font-bold tracking-tight">
+        <h1 className="mb-4 text-5xl md:text-7xl font-bold tracking-tight animate-fade-in">
           <span className="text-foreground">EXODUS</span>{" "}
           <span className="text-primary">DayZ</span>
         </h1>
-        <p className="mb-8 text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
+        <p className="mb-8 text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: '200ms' }}>
           Приватні PVE/PVP сервери з кастомними модами та VIP-опціями
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="lg" className="text-base">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: '400ms' }}>
+          <Button 
+            size="lg" 
+            className="text-base"
+            onClick={() => document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' })}
+          >
             Переглянути товари
           </Button>
-          <Button size="lg" variant="outline" className="text-base">
+          <Button 
+            size="lg" 
+            variant="outline" 
+            className="text-base"
+            onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
+          >
             Про сервер
           </Button>
         </div>

@@ -81,7 +81,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md animate-scale-in">
         <CardHeader>
           <CardTitle className="text-3xl font-military text-center">Exodus DayZ</CardTitle>
           <CardDescription className="text-center">

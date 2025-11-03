@@ -4,6 +4,7 @@ import Hero from "@/components/Hero";
 import VeteranBanner from "@/components/VeteranBanner";
 import CategoryFilter, { Category } from "@/components/CategoryFilter";
 import ProductCard from "@/components/ProductCard";
+import ProductSkeleton from "@/components/ProductSkeleton";
 import CartDrawer from "@/components/cart/CartDrawer";
 import Footer from "@/components/Footer";
 import { products } from "@/data/products";
@@ -18,6 +19,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category>("all");
   const [cartOpen, setCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<Array<{ productId: string; quantity: number }>>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -28,6 +30,9 @@ const Index = () => {
         setCartItems(JSON.parse(savedCart));
       }
     }
+    
+    // Simulate loading for better UX
+    setTimeout(() => setLoadingProducts(false), 800);
   }, [user]);
 
   const fetchCart = async () => {
@@ -162,13 +167,24 @@ const Index = () => {
         <CategoryFilter onCategoryChange={setSelectedCategory} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard 
-                key={product.id} 
-                product={product}
-                onAddToCart={addToCart}
-              />
-            ))}
+            {loadingProducts ? (
+              // Show skeletons while loading
+              Array.from({ length: 8 }).map((_, index) => (
+                <ProductSkeleton key={index} />
+              ))
+            ) : (
+              filteredProducts.map((product, index) => (
+                <div
+                  key={product.id}
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <ProductCard 
+                    product={product}
+                    onAddToCart={addToCart}
+                  />
+                </div>
+              ))
+            )}
         </div>
 
         {filteredProducts.length === 0 && (

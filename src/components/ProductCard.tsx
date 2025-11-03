@@ -21,15 +21,16 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
   return (
-    <Link to={`/product/${product.id}`}>
-      <Card className="overflow-hidden transition-all hover:shadow-[var(--shadow-elevated)] hover:-translate-y-1 bg-gradient-to-br from-card to-card/80 border-border h-full">
+    <Link to={`/product/${product.id}`} className="animate-fade-in">
+      <Card className="overflow-hidden transition-all hover:shadow-[var(--shadow-elevated)] hover:-translate-y-1 bg-gradient-to-br from-card to-card/80 border-border h-full group">
         <CardHeader className="p-0">
-          <div className="aspect-square overflow-hidden bg-muted">
+          <div className="aspect-square overflow-hidden bg-muted relative">
             <img
               src={product.image}
               alt={product.name}
-              className="h-full w-full object-cover transition-transform hover:scale-110"
+              className="h-full w-full object-cover transition-all duration-500 group-hover:scale-110"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
         </CardHeader>
       <CardContent className="p-4">

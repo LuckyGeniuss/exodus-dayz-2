@@ -27,7 +27,7 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onRemove, onChecko
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-lg">
+      <SheetContent className="w-full sm:max-w-lg animate-slide-in-right">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <ShoppingBag className="h-5 w-5" />
@@ -46,12 +46,16 @@ const CartDrawer = ({ open, onClose, items, onUpdateQuantity, onRemove, onChecko
         ) : (
           <div className="flex flex-col h-[calc(100vh-180px)]">
             <div className="flex-1 overflow-y-auto py-6 space-y-4">
-              {items.map((item) => {
+              {items.map((item, index) => {
                 const product = products.find(p => p.id === item.productId);
                 if (!product) return null;
 
                 return (
-                  <div key={item.productId} className="flex gap-4 p-4 border rounded-lg">
+                  <div 
+                    key={item.productId} 
+                    className="flex gap-4 p-4 border rounded-lg transition-all hover:shadow-md animate-fade-in hover-scale"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
                     <img
                       src={product.image}
                       alt={product.name}

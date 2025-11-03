@@ -187,9 +187,9 @@ const Checkout = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
-      <h1 className="text-4xl font-military mb-8">Оформлення замовлення</h1>
+      <h1 className="text-4xl font-military mb-8 animate-fade-in">Оформлення замовлення</h1>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 animate-fade-in" style={{ animationDelay: '200ms' }}>
         <div className="space-y-4">
           <Card>
             <CardHeader>

@@ -2,6 +2,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ShoppingCart, Shield, Package } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { products } from "@/data/products";
 import { Badge } from "@/components/ui/badge";
@@ -33,29 +34,28 @@ const ProductDetail = () => {
       <Header onCartOpen={() => {}} cartItemCount={0} />
       
       <div className="container mx-auto px-4 py-12">
-        <Button 
-          variant="ghost" 
-          className="mb-8"
-          onClick={() => navigate("/")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Назад до магазину
-        </Button>
+        <Breadcrumbs 
+          items={[
+            { label: 'Магазин', href: '/#shop' },
+            { label: product.category, href: '/#shop' },
+            { label: product.name }
+          ]}
+        />
 
         <div className="grid md:grid-cols-2 gap-12 items-start">
           {/* Product Image */}
-          <div className="space-y-4">
-            <div className="aspect-square rounded-lg overflow-hidden bg-muted border border-border">
+          <div className="space-y-4 animate-fade-in">
+            <div className="aspect-square rounded-lg overflow-hidden bg-muted border border-border group">
               <img
                 src={product.image}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
             </div>
           </div>
 
           {/* Product Info */}
-          <div className="space-y-6">
+          <div className="space-y-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
             <div>
               <Badge className="mb-3">{product.category}</Badge>
               <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
