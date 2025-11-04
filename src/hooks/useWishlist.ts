@@ -31,13 +31,13 @@ export const useWishlist = () => {
     if (!user) return;
     
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('wishlist')
       .select('product_id')
       .eq('user_id', user.id);
 
     if (data && !error) {
-      setWishlist(data.map(item => item.product_id));
+      setWishlist(data.map((item: any) => item.product_id));
     }
     setLoading(false);
   };
@@ -47,7 +47,7 @@ export const useWishlist = () => {
 
     if (user) {
       if (isInWishlist) {
-        await supabase
+        await (supabase as any)
           .from('wishlist')
           .delete()
           .eq('user_id', user.id)
@@ -56,7 +56,7 @@ export const useWishlist = () => {
         setWishlist(prev => prev.filter(id => id !== productId));
         toast.success('Видалено зі збережених');
       } else {
-        await supabase
+        await (supabase as any)
           .from('wishlist')
           .insert({ user_id: user.id, product_id: productId });
         
