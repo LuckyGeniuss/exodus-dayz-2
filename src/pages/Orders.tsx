@@ -3,6 +3,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { Package } from 'lucide-react';
 import Header from '@/components/Header';
@@ -82,8 +83,12 @@ const Orders = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {orders.map((order) => (
-            <Card key={order.id}>
+          {orders.map((order, index) => (
+            <Card 
+              key={order.id}
+              className="animate-fade-in"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
@@ -105,17 +110,19 @@ const Orders = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
+                  <h4 className="font-semibold text-sm text-muted-foreground">Товари:</h4>
                   {order.order_items?.map((item: any) => (
-                    <div key={item.id} className="flex justify-between text-sm">
-                      <span>
-                        {item.product_name} × {item.quantity}
-                      </span>
-                      <span>{(item.product_price * item.quantity).toFixed(2)} ₴</span>
+                    <div key={item.id} className="flex justify-between text-sm py-2 border-b border-border last:border-0">
+                      <div>
+                        <p className="font-medium">{item.product_name}</p>
+                        <p className="text-xs text-muted-foreground">Кількість: {item.quantity}</p>
+                      </div>
+                      <span className="font-semibold">{(item.product_price * item.quantity).toFixed(2)} ₴</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="border-t pt-4 space-y-1">
+                <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Сума:</span>
                     <span>{order.total_amount} ₴</span>
@@ -126,14 +133,21 @@ const Orders = () => {
                       <span>-{order.discount_amount} ₴</span>
                     </div>
                   )}
-                  <div className="flex justify-between font-bold">
+                  <div className="flex justify-between font-bold text-lg">
                     <span>До сплати:</span>
-                    <span>{order.final_amount} ₴</span>
+                    <span className="text-primary">{order.final_amount} ₴</span>
                   </div>
+                  <Separator className="my-2" />
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Спосіб оплати:</span>
-                    <span>{order.payment_method}</span>
+                    <span className="capitalize">{order.payment_method}</span>
                   </div>
+                  {order.steam_id && (
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>Steam ID:</span>
+                      <span className="font-mono">{order.steam_id}</span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

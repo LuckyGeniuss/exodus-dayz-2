@@ -5,6 +5,7 @@ import VeteranBanner from "@/components/VeteranBanner";
 import CategoryFilter, { Category } from "@/components/CategoryFilter";
 import ProductCard from "@/components/ProductCard";
 import ProductSkeleton from "@/components/ProductSkeleton";
+import SearchBar from "@/components/SearchBar";
 import CartDrawer from "@/components/cart/CartDrawer";
 import Footer from "@/components/Footer";
 import { products } from "@/data/products";
@@ -17,6 +18,7 @@ const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<Category>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<Array<{ productId: string; quantity: number }>>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -127,13 +129,28 @@ const Index = () => {
   };
 
   const filteredProducts = useMemo(() => {
-    if (selectedCategory === "all") return products;
+    let filtered = products;
     
-    return products.filter(product => {
-      const productCategory = categoryMap[product.category];
-      return productCategory === selectedCategory;
-    });
-  }, [selectedCategory]);
+    // Filter by category
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter(product => {
+        const productCategory = categoryMap[product.category];
+        return productCategory === selectedCategory;
+      });
+    }
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(query) ||
+        product.description.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query)
+      );
+    }
+    
+    return filtered;
+  }, [selectedCategory, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -165,6 +182,10 @@ const Index = () => {
         </div>
 
         <CategoryFilter onCategoryChange={setSelectedCategory} />
+        
+        <div className="mt-8 mb-8">
+          <SearchBar value={searchQuery} onChange={setSearchQuery} />
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {loadingProducts ? (
@@ -187,10 +208,10 @@ const Index = () => {
             )}
         </div>
 
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-20">
+        {filteredProducts.length === 0 && !loadingProducts && (
+          <div className="text-center py-20 col-span-full">
             <p className="text-muted-foreground text-lg">
-              Товарів у цій категорії поки немає
+              {searchQuery ? 'Нічого не знайдено за вашим запитом' : 'Товарів у цій категорії поки немає'}
             </p>
           </div>
         )}
