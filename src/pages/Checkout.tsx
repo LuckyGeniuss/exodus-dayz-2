@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, CreditCard, Wallet, Banknote, ShoppingCart } from 'lucide-react';
@@ -27,6 +28,9 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'usdt' | 'balance'>('card');
   const [profile, setProfile] = useState<any>(null);
   const [processing, setProcessing] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoError, setPromoError] = useState('');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -79,12 +83,32 @@ const Checkout = () => {
     }
   };
 
-  const total = cartItems.reduce((sum, item) => {
+  const subtotal = cartItems.reduce((sum, item) => {
     return sum + (parseFloat(item.product_price || 0) * item.quantity);
   }, 0);
 
-  const discount = profile?.is_veteran ? total * 0.1 : 0;
-  const finalTotal = total - discount;
+  const veteranDiscount = profile?.is_veteran ? subtotal * 0.1 : 0;
+  const promoDiscountAmount = subtotal * (promoDiscount / 100);
+  const total = subtotal - veteranDiscount - promoDiscountAmount;
+
+  const applyPromoCode = () => {
+    setPromoError('');
+    
+    const validPromoCodes: Record<string, number> = {
+      'EXODUS10': 10,
+      'VIP15': 15,
+      'WELCOME5': 5,
+    };
+    
+    const upperCode = promoCode.toUpperCase();
+    if (validPromoCodes[upperCode]) {
+      setPromoDiscount(validPromoCodes[upperCode]);
+      toast.success(`Промокод застосовано! Знижка ${validPromoCodes[upperCode]}%`);
+    } else {
+      setPromoError('Невірний промокод');
+      setPromoDiscount(0);
+    }
+  };
 
   const handleCheckout = async () => {
     if (!user) return;
@@ -229,11 +253,11 @@ const Checkout = () => {
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="balance" id="balance" disabled={!profile || profile.balance < finalTotal} />
+                  <RadioGroupItem value="balance" id="balance" disabled={!profile || profile.balance < total} />
                   <Label htmlFor="balance" className="flex items-center gap-2 cursor-pointer">
                     <Wallet className="h-4 w-4" />
                     Баланс ({profile?.balance || 0} ₴)
-                    {profile && profile.balance < finalTotal && (
+                    {profile && profile.balance < total && (
                       <span className="text-xs text-muted-foreground">(Недостатньо коштів)</span>
                     )}
                   </Label>
@@ -249,24 +273,64 @@ const Checkout = () => {
               <CardTitle>Підсумок</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Сума:</span>
-                  <span>{total.toFixed(2)} ₴</span>
-                </div>
-                {profile?.is_veteran && discount > 0 && (
-                  <div className="flex justify-between text-sm text-green-600">
-                    <span className="flex items-center gap-2">
-                      Знижка ветерана АТО/ООС:
-                      <Badge variant="secondary">-10%</Badge>
-                    </span>
-                    <span>-{discount.toFixed(2)} ₴</span>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="promoCode">Промокод</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="promoCode"
+                      value={promoCode}
+                      onChange={(e) => {
+                        setPromoCode(e.target.value);
+                        setPromoError('');
+                      }}
+                      placeholder="Введіть промокод"
+                      className={promoError ? 'border-destructive' : ''}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={applyPromoCode}
+                      disabled={!promoCode.trim()}
+                    >
+                      Застосувати
+                    </Button>
                   </div>
-                )}
+                  {promoError && (
+                    <p className="text-sm text-destructive">{promoError}</p>
+                  )}
+                  {promoDiscount > 0 && (
+                    <p className="text-sm text-green-600">✓ Промокод застосовано: -{promoDiscount}%</p>
+                  )}
+                </div>
+                
                 <Separator />
-                <div className="flex justify-between text-lg font-bold">
-                  <span>До сплати:</span>
-                  <span>{finalTotal.toFixed(2)} ₴</span>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Сума:</span>
+                    <span>{subtotal.toFixed(2)} ₴</span>
+                  </div>
+                  {profile?.is_veteran && veteranDiscount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span className="flex items-center gap-2">
+                        Знижка ветерана АТО/ООС:
+                        <Badge variant="secondary">-10%</Badge>
+                      </span>
+                      <span>-{veteranDiscount.toFixed(2)} ₴</span>
+                    </div>
+                  )}
+                  {promoDiscountAmount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Знижка за промокодом:</span>
+                      <span>-{promoDiscountAmount.toFixed(2)} ₴</span>
+                    </div>
+                  )}
+                  <Separator />
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>До сплати:</span>
+                    <span className="text-primary">{total.toFixed(2)} ₴</span>
+                  </div>
                 </div>
               </div>
 
@@ -274,7 +338,7 @@ const Checkout = () => {
                 className="w-full" 
                 size="lg"
                 onClick={handleCheckout}
-                disabled={processing}
+                 disabled={processing || cartItems.length === 0}
               >
                 {processing ? (
                   <>

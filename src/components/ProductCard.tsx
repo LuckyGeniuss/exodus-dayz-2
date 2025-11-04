@@ -1,7 +1,9 @@
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { useWishlist } from "@/hooks/useWishlist";
 
 export interface Product {
   id: string;
@@ -20,6 +22,9 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const inWishlist = isInWishlist(product.id);
+
   return (
     <Link to={`/product/${product.id}`} className="animate-fade-in">
       <Card className="overflow-hidden transition-all hover:shadow-[var(--shadow-elevated)] hover:-translate-y-1 bg-gradient-to-br from-card to-card/80 border-border h-full group">
@@ -31,15 +36,31 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
               className="h-full w-full object-cover transition-all duration-500 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleWishlist(product.id);
+              }}
+              className="absolute top-2 right-2 h-9 w-9 p-0 bg-background/80 hover:bg-background backdrop-blur-sm"
+            >
+              <Heart 
+                className={`h-5 w-5 transition-colors ${
+                  inWishlist ? 'fill-primary text-primary' : 'text-muted-foreground'
+                }`}
+              />
+            </Button>
           </div>
         </CardHeader>
       <CardContent className="p-4">
         <div className="mb-2">
-          <span className="inline-block px-2 py-1 text-xs font-medium bg-primary/20 text-primary rounded">
+          <Badge variant="outline">
             {product.category}
-          </span>
+          </Badge>
         </div>
-        <h3 className="font-bold text-lg mb-2 line-clamp-1">{product.name}</h3>
+        <h3 className="font-bold text-lg mb-2 line-clamp-1 group-hover:text-primary transition-colors">{product.name}</h3>
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
           {product.description}
         </p>
