@@ -52,6 +52,8 @@ export type Database = {
           added_at: string | null
           id: string
           product_id: string
+          product_name: string | null
+          product_price: number | null
           quantity: number | null
           user_id: string
         }
@@ -59,6 +61,8 @@ export type Database = {
           added_at?: string | null
           id?: string
           product_id: string
+          product_name?: string | null
+          product_price?: number | null
           quantity?: number | null
           user_id: string
         }
@@ -66,6 +70,8 @@ export type Database = {
           added_at?: string | null
           id?: string
           product_id?: string
+          product_name?: string | null
+          product_price?: number | null
           quantity?: number | null
           user_id?: string
         }

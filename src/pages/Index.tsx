@@ -8,8 +8,9 @@ import ProductSkeleton from "@/components/ProductSkeleton";
 import SearchBar from "@/components/SearchBar";
 import CartDrawer from "@/components/cart/CartDrawer";
 import Footer from "@/components/Footer";
-import { products } from "@/data/products";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useProducts } from "@/hooks/useProducts";
+import { Product } from "@/components/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -21,7 +22,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<Array<{ productId: string; quantity: number }>>([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
+  const { products, loading: productsLoading } = useProducts();
 
   useEffect(() => {
     if (user) {
@@ -32,9 +33,6 @@ const Index = () => {
         setCartItems(JSON.parse(savedCart));
       }
     }
-    
-    // Simulate loading for better UX
-    setTimeout(() => setLoadingProducts(false), 800);
   }, [user]);
 
   const fetchCart = async () => {
@@ -188,7 +186,7 @@ const Index = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {loadingProducts ? (
+            {productsLoading ? (
               // Show skeletons while loading
               Array.from({ length: 8 }).map((_, index) => (
                 <ProductSkeleton key={index} />
@@ -208,7 +206,7 @@ const Index = () => {
             )}
         </div>
 
-        {filteredProducts.length === 0 && !loadingProducts && (
+        {filteredProducts.length === 0 && !productsLoading && (
           <div className="text-center py-20 col-span-full">
             <p className="text-muted-foreground text-lg">
               {searchQuery ? 'Нічого не знайдено за вашим запитом' : 'Товарів у цій категорії поки немає'}

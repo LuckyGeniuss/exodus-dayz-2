@@ -4,13 +4,45 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { Button } from "@/components/ui/button";
-import { products } from "@/data/products";
 import { Badge } from "@/components/ui/badge";
+import { useCart } from "@/hooks/useCart";
+import { useProducts } from "@/hooks/useProducts";
+import { toast } from "@/hooks/use-toast";
+import { Product } from "@/components/ProductCard";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { products, loading } = useProducts();
+  const { addItem, getItemCount } = useCart();
   const product = products.find((p) => p.id === id);
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    addItem(product);
+    toast({
+      title: "Додано до кошика",
+      description: `${product.name} додано до кошика`,
+    });
+  };
+
+  const handleBuyNow = () => {
+    if (!product) return;
+    addItem(product);
+    navigate("/checkout");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header onCartOpen={() => {}} cartItemCount={0} />
+        <div className="container mx-auto px-4 py-20 text-center">
+          <p className="text-muted-foreground">Завантаження...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -31,7 +63,7 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onCartOpen={() => {}} cartItemCount={0} />
+      <Header onCartOpen={() => {}} cartItemCount={getItemCount()} />
       
       <div className="container mx-auto px-4 py-12">
         <Breadcrumbs 
@@ -84,11 +116,11 @@ const ProductDetail = () => {
             </div>
 
             <div className="space-y-4">
-              <Button size="lg" className="w-full">
+              <Button size="lg" className="w-full" onClick={handleAddToCart}>
                 <ShoppingCart className="mr-2 h-5 w-5" />
                 Додати до кошика
               </Button>
-              <Button variant="outline" size="lg" className="w-full">
+              <Button variant="outline" size="lg" className="w-full" onClick={handleBuyNow}>
                 Купити зараз
               </Button>
             </div>
