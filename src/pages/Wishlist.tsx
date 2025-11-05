@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import { Card, CardContent } from '@/components/ui/card';
+import EmptyState from '@/components/EmptyState';
 import { Button } from '@/components/ui/button';
-import { Heart } from 'lucide-react';
+import { Heart, ShoppingCart } from 'lucide-react';
 import { products } from '@/data/products';
 import { useWishlist } from '@/hooks/useWishlist';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,6 +81,15 @@ const Wishlist = () => {
     toast.success('Товар додано до кошика');
   };
 
+  const addAllToCart = async () => {
+    let addedCount = 0;
+    for (const product of wishlistProducts) {
+      await addToCart(product.id);
+      addedCount++;
+    }
+    toast.success(`${addedCount} товарів додано до кошика`);
+  };
+
   const wishlistProducts = products.filter(product => wishlist.includes(product.id));
 
   if (wishlistLoading) {
@@ -103,34 +112,35 @@ const Wishlist = () => {
       />
       
       <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mb-8 animate-fade-in">
-          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-            <Heart className="h-8 w-8 text-primary" />
-            Збережені <span className="text-primary">товари</span>
-          </h1>
-          <p className="text-muted-foreground">
-            {wishlistProducts.length > 0 
-              ? `У вас ${wishlistProducts.length} збережен${wishlistProducts.length === 1 ? 'ий' : 'их'} товар${wishlistProducts.length === 1 ? '' : 'ів'}`
-              : 'У вас поки немає збережених товарів'
-            }
-          </p>
+        <div className="mb-8 animate-fade-in flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
+              <Heart className="h-8 w-8 text-primary" />
+              Збережені <span className="text-primary">товари</span>
+            </h1>
+            <p className="text-muted-foreground">
+              {wishlistProducts.length > 0 
+                ? `У вас ${wishlistProducts.length} збережен${wishlistProducts.length === 1 ? 'ий' : 'их'} товар${wishlistProducts.length === 1 ? '' : 'ів'}`
+                : 'У вас поки немає збережених товарів'
+              }
+            </p>
+          </div>
+          {wishlistProducts.length > 0 && (
+            <Button onClick={addAllToCart} size="lg">
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Додати все до кошика
+            </Button>
+          )}
         </div>
 
         {wishlistProducts.length === 0 ? (
-          <Card className="animate-fade-in" style={{ animationDelay: '200ms' }}>
-            <CardContent className="py-12 text-center">
-              <Heart className="h-16 w-16 mx-auto mb-4 opacity-20" />
-              <p className="text-muted-foreground mb-4">
-                Ви ще не зберегли жодного товару
-              </p>
-              <p className="text-sm text-muted-foreground mb-6">
-                Натисніть на іконку серця на картці товару, щоб додати його до збережених
-              </p>
-              <Button onClick={() => navigate('/')}>
-                Переглянути товари
-              </Button>
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={Heart}
+            title="Ваш список бажань порожній"
+            description="Додайте товари до списку бажань, щоб не загубити їх"
+            actionLabel="Переглянути товари"
+            onAction={() => navigate('/')}
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {wishlistProducts.map((product, index) => (

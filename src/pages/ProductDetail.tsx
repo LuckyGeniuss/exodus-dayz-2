@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ShoppingCart, Shield, Package } from "lucide-react";
+import { useEffect } from "react";
+import { ArrowLeft, ShoppingCart, Shield, Package, Tag } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -7,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/hooks/useCart";
 import { useProducts } from "@/hooks/useProducts";
+import { useViewedProducts } from "@/hooks/useViewedProducts";
+import { usePromotions } from "@/hooks/usePromotions";
 import { toast } from "@/hooks/use-toast";
 import { Product } from "@/components/ProductCard";
 
@@ -15,7 +18,20 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { products, loading } = useProducts();
   const { addItem, getItemCount } = useCart();
+  const { addViewedProduct } = useViewedProducts();
+  const { getProductPromotion } = usePromotions();
   const product = products.find((p) => p.id === id);
+  const promotion = product ? getProductPromotion(product.id) : null;
+  
+  const finalPrice = product && promotion
+    ? product.price * (1 - promotion.discount_percent / 100)
+    : product?.price;
+
+  useEffect(() => {
+    if (product) {
+      addViewedProduct(product.id);
+    }
+  }, [product]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -89,7 +105,15 @@ const ProductDetail = () => {
           {/* Product Info */}
           <div className="space-y-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
             <div>
-              <Badge className="mb-3">{product.category}</Badge>
+              <div className="flex items-center gap-2 mb-3">
+                <Badge>{product.category}</Badge>
+                {promotion && (
+                  <Badge className="bg-destructive text-destructive-foreground">
+                    <Tag className="w-3 h-3 mr-1" />
+                    -{promotion.discount_percent}%
+                  </Badge>
+                )}
+              </div>
               <h1 className="text-4xl font-bold mb-4">{product.name}</h1>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                 {product.fullDescription || product.description}
@@ -110,9 +134,12 @@ const ProductDetail = () => {
               )}
             </div>
 
-            <div className="flex items-baseline gap-2 py-6 border-y border-border">
-              <span className="text-5xl font-bold text-primary">{product.price}</span>
+            <div className="flex items-baseline gap-3 py-6 border-y border-border">
+              <span className="text-5xl font-bold text-primary">{finalPrice?.toFixed(0)}</span>
               <span className="text-2xl text-muted-foreground">₴</span>
+              {promotion && (
+                <span className="text-2xl text-muted-foreground line-through">{product.price} ₴</span>
+              )}
             </div>
 
             <div className="space-y-4">

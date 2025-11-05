@@ -256,6 +256,36 @@ export type Database = {
         }
         Relationships: []
       }
+      promotions: {
+        Row: {
+          created_at: string
+          discount_percent: number
+          end_date: string | null
+          id: string
+          is_active: boolean
+          product_id: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          discount_percent: number
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          product_id: string
+          start_date?: string
+        }
+        Update: {
+          created_at?: string
+          discount_percent?: number
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          product_id?: string
+          start_date?: string
+        }
+        Relationships: []
+      }
       rate_limit_log: {
         Row: {
           created_at: string
@@ -301,6 +331,27 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      viewed_products: {
+        Row: {
+          id: string
+          product_id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          user_id?: string
+          viewed_at?: string
         }
         Relationships: []
       }

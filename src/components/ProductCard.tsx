@@ -1,9 +1,10 @@
-import { ShoppingCart, Heart } from "lucide-react";
+import { ShoppingCart, Heart, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { useWishlist } from "@/hooks/useWishlist";
+import { usePromotions } from "@/hooks/usePromotions";
 
 export interface Product {
   id: string;
@@ -23,13 +24,25 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
   const { isInWishlist, toggleWishlist } = useWishlist();
+  const { getProductPromotion } = usePromotions();
   const inWishlist = isInWishlist(product.id);
+  const promotion = getProductPromotion(product.id);
+  
+  const finalPrice = promotion 
+    ? product.price * (1 - promotion.discount_percent / 100)
+    : product.price;
 
   return (
     <Link to={`/product/${product.id}`} className="animate-fade-in">
       <Card className="overflow-hidden transition-all hover:shadow-[var(--shadow-elevated)] hover:-translate-y-1 bg-gradient-to-br from-card to-card/80 border-border h-full group">
         <CardHeader className="p-0">
           <div className="aspect-square overflow-hidden bg-muted relative">
+            {promotion && (
+              <Badge className="absolute top-3 left-3 z-10 bg-destructive text-destructive-foreground">
+                <Tag className="w-3 h-3 mr-1" />
+                -{promotion.discount_percent}%
+              </Badge>
+            )}
             <img
               src={product.image}
               alt={product.name}
@@ -64,9 +77,19 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
           {product.description}
         </p>
-        <div className="flex items-baseline gap-1">
-          <span className="text-2xl font-bold text-primary">{product.price}</span>
-          <span className="text-muted-foreground">₴</span>
+        <div className="flex items-baseline gap-2">
+          {promotion ? (
+            <>
+              <span className="text-2xl font-bold text-primary">{finalPrice.toFixed(0)}</span>
+              <span className="text-muted-foreground">₴</span>
+              <span className="text-sm text-muted-foreground line-through">{product.price} ₴</span>
+            </>
+          ) : (
+            <>
+              <span className="text-2xl font-bold text-primary">{product.price}</span>
+              <span className="text-muted-foreground">₴</span>
+            </>
+          )}
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0">

@@ -14,6 +14,14 @@ import { Loader2, CreditCard, Wallet, Banknote, ShoppingCart } from 'lucide-reac
 import { toast } from 'sonner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import CheckoutStepper from '@/components/CheckoutStepper';
+import Confetti from '@/components/Confetti';
+
+const steps = [
+  { id: 1, title: "Кошик" },
+  { id: 2, title: "Оплата" },
+  { id: 3, title: "Підтвердження" },
+];
 
 // Validation schema for cart items
 const cartItemSchema = z.object({
@@ -24,6 +32,8 @@ const cartItemSchema = z.object({
 const Checkout = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(2);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'usdt' | 'balance'>('card');
   const [profile, setProfile] = useState<any>(null);
@@ -167,8 +177,12 @@ const Checkout = () => {
         .delete()
         .eq('user_id', user.id);
 
+      setCurrentStep(3);
+      setShowConfetti(true);
       toast.success('Замовлення успішно створено!');
-      navigate('/orders');
+      setTimeout(() => {
+        navigate('/orders');
+      }, 3000);
     } catch (error: any) {
       console.error('Checkout error:', error);
       toast.error(error.message || 'Помилка при створенні замовлення');
@@ -209,8 +223,10 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {showConfetti && <Confetti />}
       <Header />
       <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
+      <CheckoutStepper currentStep={currentStep} steps={steps} />
       <h1 className="text-4xl font-military mb-8 animate-fade-in">Оформлення замовлення</h1>
 
       <div className="grid gap-6 md:grid-cols-2 animate-fade-in" style={{ animationDelay: '200ms' }}>

@@ -6,6 +6,7 @@ import ProductCard from "@/components/ProductCard";
 import ProductSkeleton from "@/components/ProductSkeleton";
 import SearchBar from "@/components/SearchBar";
 import ProductFilters, { SortOption, Category } from "@/components/ProductFilters";
+import EmptyState from "@/components/EmptyState";
 import CartDrawer from "@/components/cart/CartDrawer";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -14,6 +15,7 @@ import { Product } from "@/components/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Search, Package } from "lucide-react";
 
 const Index = () => {
   const { user } = useAuth();
@@ -257,13 +259,17 @@ const Index = () => {
             )}
             </div>
 
-            {filteredProducts.length === 0 && !productsLoading && (
-          <div className="text-center py-20 col-span-full">
-            <p className="text-muted-foreground text-lg">
-              {searchQuery ? 'Нічого не знайдено за вашим запитом' : 'Товарів у цій категорії поки немає'}
-            </p>
-            </div>
-            )}
+        {filteredProducts.length === 0 && !productsLoading && (
+          <EmptyState
+            icon={searchQuery ? Search : Package}
+            title={searchQuery ? 'Нічого не знайдено' : 'Товарів поки немає'}
+            description={
+              searchQuery 
+                ? 'Спробуйте змінити параметри пошуку або фільтри' 
+                : 'Оберіть іншу категорію або скиньте фільтри'
+            }
+          />
+        )}
           </div>
         </div>
       </section>
