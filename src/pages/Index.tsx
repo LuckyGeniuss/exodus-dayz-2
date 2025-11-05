@@ -2,10 +2,10 @@ import { useState, useMemo, useEffect } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import VeteranBanner from "@/components/VeteranBanner";
-import CategoryFilter, { Category } from "@/components/CategoryFilter";
 import ProductCard from "@/components/ProductCard";
 import ProductSkeleton from "@/components/ProductSkeleton";
 import SearchBar from "@/components/SearchBar";
+import ProductFilters, { SortOption, Category } from "@/components/ProductFilters";
 import CartDrawer from "@/components/cart/CartDrawer";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -18,11 +18,21 @@ import { toast } from "sonner";
 const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState<Category>("all");
+  const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
+  const [sortOption, setSortOption] = useState<SortOption>("newest");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [searchQuery, setSearchQuery] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<Array<{ productId: string; quantity: number }>>([]);
   const { products, loading: productsLoading } = useProducts();
+
+  const maxPrice = useMemo(() => {
+    return Math.max(...products.map(p => p.price), 10000);
+  }, [products]);
+
+  useEffect(() => {
+    setPriceRange([0, maxPrice]);
+  }, [maxPrice]);
 
   useEffect(() => {
     if (user) {
@@ -129,13 +139,18 @@ const Index = () => {
   const filteredProducts = useMemo(() => {
     let filtered = products;
     
-    // Filter by category
-    if (selectedCategory !== "all") {
+    // Filter by categories
+    if (selectedCategories.length > 0) {
       filtered = filtered.filter(product => {
         const productCategory = categoryMap[product.category];
-        return productCategory === selectedCategory;
+        return selectedCategories.includes(productCategory);
       });
     }
+    
+    // Filter by price range
+    filtered = filtered.filter(product => 
+      product.price >= priceRange[0] && product.price <= priceRange[1]
+    );
     
     // Filter by search query
     if (searchQuery.trim()) {
@@ -146,9 +161,30 @@ const Index = () => {
         product.category.toLowerCase().includes(query)
       );
     }
+
+    // Sort products
+    const sorted = [...filtered];
+    switch (sortOption) {
+      case "price-asc":
+        sorted.sort((a, b) => a.price - b.price);
+        break;
+      case "price-desc":
+        sorted.sort((a, b) => b.price - a.price);
+        break;
+      case "name-asc":
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name-desc":
+        sorted.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "newest":
+      default:
+        // Already sorted by created_at desc from DB
+        break;
+    }
     
-    return filtered;
-  }, [selectedCategory, searchQuery]);
+    return sorted;
+  }, [selectedCategories, priceRange, searchQuery, sortOption, products]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -178,14 +214,29 @@ const Index = () => {
             Всі товари відповідають правилам монетизації Bohemia Interactive.
           </p>
         </div>
-
-        <CategoryFilter onCategoryChange={setSelectedCategory} />
         
-        <div className="mt-8 mb-8">
+        <div className="mb-8">
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="flex gap-8">
+          {/* Filters Sidebar */}
+          <aside className="w-full lg:w-64 flex-shrink-0">
+            <ProductFilters
+              onSortChange={setSortOption}
+              onPriceRangeChange={(min, max) => setPriceRange([min, max])}
+              onCategoriesChange={setSelectedCategories}
+              maxPrice={maxPrice}
+              currentSort={sortOption}
+              currentPriceRange={priceRange}
+              currentCategories={selectedCategories}
+              resultsCount={filteredProducts.length}
+            />
+          </aside>
+
+          {/* Products Grid */}
+          <div className="flex-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {productsLoading ? (
               // Show skeletons while loading
               Array.from({ length: 8 }).map((_, index) => (
@@ -204,15 +255,17 @@ const Index = () => {
                 </div>
               ))
             )}
-        </div>
+            </div>
 
-        {filteredProducts.length === 0 && !productsLoading && (
+            {filteredProducts.length === 0 && !productsLoading && (
           <div className="text-center py-20 col-span-full">
             <p className="text-muted-foreground text-lg">
               {searchQuery ? 'Нічого не знайдено за вашим запитом' : 'Товарів у цій категорії поки немає'}
             </p>
+            </div>
+            )}
           </div>
-        )}
+        </div>
       </section>
 
       <section id="about" className="bg-card border-y border-border py-20">
