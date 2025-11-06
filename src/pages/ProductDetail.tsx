@@ -6,12 +6,16 @@ import Footer from "@/components/Footer";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/hooks/useCart";
 import { useProducts } from "@/hooks/useProducts";
 import { useViewedProducts } from "@/hooks/useViewedProducts";
 import { usePromotions } from "@/hooks/usePromotions";
+import { useReviews } from "@/hooks/useReviews";
 import { toast } from "@/hooks/use-toast";
 import { Product } from "@/components/ProductCard";
+import ReviewList from "@/components/ReviewList";
+import ReviewForm from "@/components/ReviewForm";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +26,7 @@ const ProductDetail = () => {
   const { getProductPromotion } = usePromotions();
   const product = products.find((p) => p.id === id);
   const promotion = product ? getProductPromotion(product.id) : null;
+  const { reviews, averageRating, addReview, deleteReview } = useReviews(id);
   
   const finalPrice = product && promotion
     ? product.price * (1 - promotion.discount_percent / 100)
@@ -178,6 +183,23 @@ const ProductDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        <div className="mt-20">
+          <h2 className="text-3xl font-bold mb-8">
+            Відгуки <span className="text-primary">покупців</span>
+          </h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            <ReviewForm onSubmit={addReview} />
+            <ReviewList
+              reviews={reviews}
+              averageRating={averageRating}
+              onDeleteReview={deleteReview}
+            />
+          </div>
+        </div>
+
+        <Separator className="my-20" />
 
         {/* Related Products */}
         <div className="mt-20">
