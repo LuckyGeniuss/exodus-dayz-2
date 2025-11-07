@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Mail, Calendar, Shield, Wallet } from 'lucide-react';
+import { User, Mail, Calendar, Shield, Wallet, Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Badge } from '@/components/ui/badge';
 import SteamAuthButton from '@/components/auth/SteamAuthButton';
+import AchievementsModal from '@/components/AchievementsModal';
 
 const Profile = () => {
   const { user, loading } = useAuth();
@@ -20,6 +21,7 @@ const Profile = () => {
   const [username, setUsername] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -235,9 +237,36 @@ const Profile = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Achievements Card */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-6 w-6 text-primary" />
+                Досягнення
+              </CardTitle>
+              <CardDescription>
+                Відкривайте досягнення та отримуйте винагороди
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => setShowAchievements(true)} 
+                variant="outline" 
+                className="w-full"
+              >
+                Переглянути досягнення
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </main>
       <Footer />
+
+      <AchievementsModal 
+        open={showAchievements} 
+        onOpenChange={setShowAchievements} 
+      />
     </div>
   );
 };

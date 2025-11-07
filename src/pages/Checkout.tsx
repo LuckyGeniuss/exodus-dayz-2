@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { useAchievements } from '@/hooks/useAchievements';
+import { useLoyalty } from '@/hooks/useLoyalty';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,6 +34,8 @@ const cartItemSchema = z.object({
 const Checkout = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const { checkAndUnlockAchievements } = useAchievements();
+  const { addCashback } = useLoyalty();
   const [currentStep, setCurrentStep] = useState(2);
   const [showConfetti, setShowConfetti] = useState(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
@@ -176,6 +180,32 @@ const Checkout = () => {
         .from('cart_items')
         .delete()
         .eq('user_id', user.id);
+
+      // Send email notification
+      try {
+        await supabase.functions.invoke('send-order-email', {
+          body: {
+            email: user.email,
+            orderNumber: data.orderId?.substring(0, 8) || 'N/A',
+            items: cartItems.map(item => ({
+              name: item.product_name || '',
+              quantity: item.quantity,
+              price: parseFloat(item.product_price || 0),
+            })),
+            totalAmount: subtotal,
+            finalAmount: total,
+            discountAmount: veteranDiscount + promoDiscountAmount,
+          },
+        });
+      } catch (emailError) {
+        console.error('Email notification failed:', emailError);
+      }
+
+      // Add cashback
+      await addCashback(data.orderId || '', total);
+
+      // Check achievements
+      await checkAndUnlockAchievements();
 
       setCurrentStep(3);
       setShowConfetti(true);
