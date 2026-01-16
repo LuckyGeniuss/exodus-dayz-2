@@ -2,12 +2,17 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Package, ShoppingCart, Users } from 'lucide-react';
+import { Loader2, Package, ShoppingCart, Users, BarChart3, Image, Newspaper, Ticket, Zap } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import ProductManagement from '@/components/admin/ProductManagement';
 import OrderManagement from '@/components/admin/OrderManagement';
 import UserManagement from '@/components/admin/UserManagement';
+import BannerManagement from '@/components/admin/BannerManagement';
+import NewsManagement from '@/components/admin/NewsManagement';
+import PromoCodeManagement from '@/components/admin/PromoCodeManagement';
+import FlashSaleManagement from '@/components/admin/FlashSaleManagement';
 
 const Admin = () => {
   const { isAdmin, loading } = useAdmin();
